@@ -16,10 +16,13 @@
     "docker:ssh": "docker exec -it information-manipulation-analyzer-processor /bin/bash"
   },
   "dependencies": {
+    "debug": "^4.3.1",
+    "rimraf": "^3.0.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.3"
   },
   "devDependencies": {
+    "@types/node": "^14.14.32",
     "prettier": "^2.2.1",
     "prettier-config-ambanum": "^1.0.1",
     "ts-node-dev": "^1.1.6"
