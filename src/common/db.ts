@@ -1,25 +1,37 @@
 import './bootstrap';
 // import config from 'config';
 import * as logging from 'common/logging';
-// import { MongoClient, Db } from 'mongodb';
+import mongoose from 'mongoose';
 
-// const DATABASE_URL: string = config.get('database.url');
-// const DATABASE_OPTIONS: any = config.get('database.options');
-// const DATABASE_URL_OBFUSCATED: string = DATABASE_URL.replace(/:.*@/, ':XXXXX@');
+let cachedDb: typeof mongoose;
 
-export const initDb = async (): Promise<any> =>
-  new Promise(
-    (resolve: any) => {
-      logging.info('init db');
-    }
-    // MongoClient.connect(DATABASE_URL, DATABASE_OPTIONS, async (connectErr, client) => {
-    //   if (connectErr) {
-    //     logging.error(`Could not connect to ${DATABASE_URL_OBFUSCATED}`);
-    //     // @ts-ignore
-    //     logging.error(connectErr);
-    //     process.exit();
-    //   }
-    //   logging.info(`Connected to database ${DATABASE_URL_OBFUSCATED}`);
-    //   resolve(client.db());
-    // })
-  );
+const dbConnect = async () => {
+  if (!process.env?.MONGODB_URI) {
+    throw new Error('MONGODB_URI is not set');
+  }
+
+  // check if we have a connection to the database or if it's currently
+  // connecting or disconnecting (readyState 1, 2 and 3)
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
+
+  if (cachedDb) {
+    logging.debug('=> using cached database instance');
+    return Promise.resolve(cachedDb);
+  }
+
+  const connection = await mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
+  });
+
+  cachedDb = connection;
+  logging.info(`Connected to database ${process.env.MONGODB_URI.replace(/:.*@/, ':XXXXX@')}`);
+
+  return connection;
+};
+
+export default dbConnect;
