@@ -1,6 +1,6 @@
 import * as logging from 'common/logging';
 import QueueItemModel from '../models/QueueItem';
-import { QueueItemActionTypes, QueueItemStatuses } from '../interfaces';
+import { QueueItemActionTypes, QueueItemStatuses, QueueItem } from '../interfaces';
 
 export const resetOutdated = async (processorId: string) => {
   logging.debug(`reset outdated items for processorId ${processorId}`);
@@ -21,7 +21,9 @@ export const getPendingItems = async () => {
     const query = { status: 'PENDING' };
 
     return {
-      item: await QueueItemModel.findOne(query).sort({ priority: -1, _id: -1 }),
+      item: (await QueueItemModel.findOne(query)
+        .sort({ priority: -1, _id: -1 })
+        .populate('hashtag')) as QueueItem,
       count: await QueueItemModel.find(query).count(),
     };
   } catch (e) {
@@ -37,6 +39,7 @@ export const startProcessing = async (itemId: string, processorId: string) => {
       { _id: itemId },
       { $set: { status: QueueItemStatuses.PROCESSING, processorId } }
     );
+    // TODO update Hashtag too
   } catch (e) {
     console.error(e);
     throw new Error(

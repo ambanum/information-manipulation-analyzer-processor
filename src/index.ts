@@ -2,8 +2,9 @@
 import packageJson from '../package.json';
 import * as logging from 'common/logging';
 import dbConnect from 'common/db';
-import * as twint from 'common/node-twint';
+import Twint from 'common/node-twint';
 import * as QueueItemManager from 'managers/QueueItemManager';
+import * as HashtagVolumetryManager from 'managers/HashtagVolumetryManager';
 
 const { version } = packageJson;
 
@@ -12,7 +13,7 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 
 (async () => {
   logging.info(`Launching procesor in version ${version}`);
-  logging.info(`Twint: ${twint.getVersion()}`);
+  logging.info(`Twint: ${Twint.getVersion()}`);
 
   await dbConnect();
 
@@ -30,7 +31,10 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 
     await QueueItemManager.startProcessing(item._id, PROCESSOR_ID);
 
-    // TODO process data here
+    const scraper = new Twint(item.hashtag.name);
+    const volumetry = await scraper.getVolumetry();
+
+    await HashtagVolumetryManager.batchUpsert(item.hashtag._id, volumetry, Twint.platformId);
 
     logging.info(`Item ${item._id} processing is done`);
     return setTimeout(() => process.nextTick(poll.bind(this)), WAIT_TIME);

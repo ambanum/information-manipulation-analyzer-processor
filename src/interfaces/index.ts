@@ -12,8 +12,12 @@ export interface CommonResponse {
  */
 
 export interface Hashtag {
+  _id: string;
   name: string;
   status: 'PENDING' | 'DONE';
+  firstOccurence?: string;
+  lastProcessedStartDate?: string;
+  lastProcessedEndDate?: string;
 }
 
 export interface GetHashtagsResponse extends CommonResponse {
@@ -29,7 +33,7 @@ export interface CreateHashtagInput extends CommonResponse {
  */
 
 export enum QueueItemActionTypes {
-  FIRST_FETCH = 'FIRST_FETCH',
+  HASHTAG = 'HASHTAG',
 }
 
 export enum QueueItemStatuses {
@@ -40,7 +44,9 @@ export enum QueueItemStatuses {
 }
 
 export interface QueueItem {
+  _id: string;
   name: string;
   action: QueueItemActionTypes;
   status: QueueItemStatuses;
+  hashtag: Hashtag;
 }

@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { QueueItemActionTypes, QueueItemStatuses } from '../interfaces';
+import './Hashtag';
 
 const { Schema } = mongoose;
 
@@ -33,7 +34,7 @@ const schema = new Schema(
       description:
         'field used to pass some filters or additional data to process data more finely (startDate, endDate, etc...)',
     },
-    hashtagId: { type: Schema.Types.ObjectId, ref: 'Hashtag' },
+    hashtag: { type: Schema.Types.ObjectId, ref: 'Hashtag' },
   },
   {
     strict: 'throw',
