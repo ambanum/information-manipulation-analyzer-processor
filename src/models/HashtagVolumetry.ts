@@ -30,6 +30,9 @@ const schema = new Schema(
       required: true,
       index: true,
     },
+    languages: { type: mongoose.Schema.Types.Mixed },
+    usernames: { type: mongoose.Schema.Types.Mixed },
+    associatedHashtags: { type: mongoose.Schema.Types.Mixed },
     platformId: {
       type: String,
       required: true,

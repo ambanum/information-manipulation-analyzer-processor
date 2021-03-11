@@ -58,6 +58,12 @@ export interface Volumetry {
     usernames: {
       [key: string]: number;
     };
+    languages: {
+      [key: string]: number;
+    };
+    associatedHashtags: {
+      [key: string]: number;
+    };
   };
 }
 
@@ -103,6 +109,12 @@ export default class Twint {
     logging.info(`Get volumetry for #${this.hashtag}`);
     const volumetry = this.tweets.reduce((acc: Volumetry, tweet) => {
       const date = `${tweet.created_at.substr(0, 13)}:00:00`;
+
+      const associatedHashtags = acc[date]?.associatedHashtags || {};
+      tweet.hashtags.forEach((hashtag) => {
+        associatedHashtags[hashtag] = (associatedHashtags[hashtag] || 0) + 1;
+      });
+
       return {
         ...acc,
         [date]: {
@@ -114,9 +126,15 @@ export default class Twint {
             ...(acc[date]?.usernames || {}),
             [tweet.username]: (acc[date]?.usernames[tweet.username] || 0) + 1,
           },
+          languages: {
+            ...(acc[date]?.languages || {}),
+            [tweet.language]: (acc[date]?.languages[tweet.language] || 0) + 1,
+          },
+          associatedHashtags,
         },
       };
     }, {});
+
     return volumetry;
   };
 
