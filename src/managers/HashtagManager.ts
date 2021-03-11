@@ -1,19 +1,10 @@
 import * as logging from 'common/logging';
-import HashtagVolumetryModel from 'models/HashtagVolumetry';
+import HashtagModel from 'models/Hashtag';
 
-export interface Volumetry {
-  [key: string]: {
-    tweets: number;
-    retweets: number;
-    likes: number;
-    quotes: number;
-  };
-}
-
-export const batchUpsert = async (hashtag: string, volumetry: Volumetry, platformId: string) => {
+export const up = async (hashtag: string, volumetry: Volumetry, platformId: string) => {
   const dates = Object.keys(volumetry);
 
-  await HashtagVolumetryModel.bulkWrite(
+  await HashtagModel.bulkWrite(
     dates.map((date) => {
       const { tweets, retweets, likes, quotes } = volumetry[date];
       return {

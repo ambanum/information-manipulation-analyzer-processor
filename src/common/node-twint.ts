@@ -53,6 +53,8 @@ export interface Volumetry {
   [key: string]: {
     tweets: number;
     retweets: number;
+    likes: number;
+    quotes: number;
     usernames: {
       [key: string]: number;
     };
@@ -106,6 +108,8 @@ export default class Twint {
         [date]: {
           tweets: (acc[date]?.tweets || 0) + 1,
           retweets: (acc[date]?.retweets || 0) + tweet.retweets_count,
+          likes: (acc[date]?.likes || 0) + tweet.likes_count,
+          quotes: (acc[date]?.quotes || 0) + tweet.replies_count,
           usernames: {
             ...(acc[date]?.usernames || {}),
             [tweet.username]: (acc[date]?.usernames[tweet.username] || 0) + 1,
@@ -114,5 +118,25 @@ export default class Twint {
       };
     }, {});
     return volumetry;
+  };
+
+  public getFirstOccurence = () => {
+    logging.info(`Get First occurence for #${this.hashtag}`);
+
+    // const volumetry = this.tweets.reduce((acc: Volumetry, tweet) => {
+    //   const date = `${tweet.created_at.substr(0, 13)}:00:00`;
+    //   return {
+    //     ...acc,
+    //     [date]: {
+    //       tweets: (acc[date]?.tweets || 0) + 1,
+    //       retweets: (acc[date]?.retweets || 0) + tweet.retweets_count,
+    //       usernames: {
+    //         ...(acc[date]?.usernames || {}),
+    //         [tweet.username]: (acc[date]?.usernames[tweet.username] || 0) + 1,
+    //       },
+    //     },
+    //   };
+    // }, {});
+    return '';
   };
 }

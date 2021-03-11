@@ -36,6 +36,8 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 
     await HashtagVolumetryManager.batchUpsert(item.hashtag._id, volumetry, Twint.platformId);
 
+    // const firstOccurence = await scraper.getFirstOccurence();
+
     logging.info(`Item ${item._id} processing is done`);
     return setTimeout(() => process.nextTick(poll.bind(this)), WAIT_TIME);
   };

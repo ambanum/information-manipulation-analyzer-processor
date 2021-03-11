@@ -20,6 +20,16 @@ const schema = new Schema(
       required: true,
       index: true,
     },
+    nbLikes: {
+      type: Number,
+      required: true,
+      index: true,
+    },
+    nbQuotes: {
+      type: Number,
+      required: true,
+      index: true,
+    },
     platformId: {
       type: String,
       required: true,
