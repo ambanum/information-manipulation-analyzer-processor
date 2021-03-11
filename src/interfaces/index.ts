@@ -11,10 +11,19 @@ export interface CommonResponse {
  * Hashtag
  */
 
+export enum HashtagStatuses {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  DONE_FIRST_FETCH = 'DONE_FIRST_FETCH',
+  PROCESSING_PREVIOUS = 'PROCESSING_PREVIOUS',
+  DONE = 'DONE',
+  DONE_ERROR = 'DONE_ERROR',
+}
+
 export interface Hashtag {
   _id: string;
   name: string;
-  status: 'PENDING' | 'DONE';
+  status: HashtagStatuses;
   firstOccurence?: string;
   lastProcessedStartDate?: string;
   lastProcessedEndDate?: string;

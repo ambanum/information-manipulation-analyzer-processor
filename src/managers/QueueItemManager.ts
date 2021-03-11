@@ -1,6 +1,7 @@
 import * as logging from 'common/logging';
 import QueueItemModel from '../models/QueueItem';
-import { QueueItemActionTypes, QueueItemStatuses, QueueItem } from '../interfaces';
+import HashtagModel from '../models/Hashtag';
+import { QueueItemActionTypes, QueueItemStatuses, QueueItem, HashtagStatuses } from '../interfaces';
 
 export const resetOutdated = async (processorId: string) => {
   logging.debug(`reset outdated items for processorId ${processorId}`);
@@ -32,18 +33,39 @@ export const getPendingItems = async () => {
   }
 };
 
-export const startProcessing = async (itemId: string, processorId: string) => {
-  logging.debug(`Start processing for queueItem ${itemId} and processor ${processorId}`);
+export const startProcessing = async (item: QueueItem, processorId: string) => {
+  logging.debug(`Start processing for queueItem ${item._id} and processor ${processorId}`);
   try {
     await QueueItemModel.updateOne(
-      { _id: itemId },
+      { _id: item._id },
       { $set: { status: QueueItemStatuses.PROCESSING, processorId } }
+    );
+    await HashtagModel.updateOne(
+      { _id: item.hashtag },
+      { $set: { status: HashtagStatuses.PROCESSING } }
     );
     // TODO update Hashtag too
   } catch (e) {
     console.error(e);
     throw new Error(
-      `Could not start processing for queueItem ${itemId} and processor ${processorId}`
+      `Could not start processing for queueItem ${item._id} and processor ${processorId}`
+    );
+  }
+};
+
+export const stopProcessing = async (item: QueueItem, processorId: string) => {
+  logging.debug(`Stop processing for queueItem ${item._id} and processor ${processorId}`);
+  try {
+    await QueueItemModel.updateOne(
+      { _id: item._id },
+      { $set: { status: QueueItemStatuses.DONE, processorId } }
+    );
+    await HashtagModel.updateOne({ _id: item.hashtag }, { $set: { status: HashtagStatuses.DONE } });
+    // TODO update Hashtag too
+  } catch (e) {
+    console.error(e);
+    throw new Error(
+      `Could not stop processing for queueItem ${item._id} and processor ${processorId}`
     );
   }
 };

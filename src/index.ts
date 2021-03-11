@@ -29,14 +29,16 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 
     logging.info(`${count} item(s) to go`);
 
-    await QueueItemManager.startProcessing(item._id, PROCESSOR_ID);
+    await QueueItemManager.startProcessing(item, PROCESSOR_ID);
 
     const scraper = new Twint(item.hashtag.name);
-    const volumetry = await scraper.getVolumetry();
+    const volumetry = scraper.getVolumetry();
 
     await HashtagVolumetryManager.batchUpsert(item.hashtag._id, volumetry, Twint.platformId);
 
     // const firstOccurence = await scraper.getFirstOccurence();
+
+    await QueueItemManager.stopProcessing(item, PROCESSOR_ID);
 
     logging.info(`Item ${item._id} processing is done`);
     return setTimeout(() => process.nextTick(poll.bind(this)), WAIT_TIME);
