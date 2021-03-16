@@ -24,9 +24,9 @@ export interface Hashtag {
   _id: string;
   name: string;
   status: HashtagStatuses;
-  firstOccurence?: string;
-  lastProcessedStartDate?: string;
-  lastProcessedEndDate?: string;
+  metadata?: {
+    lastEvaluatedTweetId?: string;
+  };
 }
 
 export interface GetHashtagsResponse extends CommonResponse {
@@ -58,4 +58,7 @@ export interface QueueItem {
   action: QueueItemActionTypes;
   status: QueueItemStatuses;
   hashtag: Hashtag;
+  metadata?: {
+    lastEvaluatedTweetId?: string;
+  };
 }

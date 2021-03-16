@@ -20,6 +20,12 @@ const schema = new Schema(
       index: true,
       enum: Object.values(hashtagStatuses),
     },
+    metadata: {
+      lastEvaluatedTweetId: {
+        type: String,
+        index: true,
+      },
+    },
   },
   {
     strict: 'throw',

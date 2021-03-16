@@ -18,6 +18,33 @@ export const resetOutdated = async (processorId: string) => {
   }
 };
 
+export const create = async (
+  hashtag: string,
+  { lastEvaluatedTweetId }: { lastEvaluatedTweetId?: string } = {}
+) => {
+  try {
+    const queueItem = new QueueItemModel({
+      priority: lastEvaluatedTweetId ? 1 : 2,
+      action: QueueItemActionTypes.HASHTAG,
+      status: QueueItemStatuses.PENDING,
+      hashtag,
+      ...(lastEvaluatedTweetId
+        ? {
+            metadata: {
+              lastEvaluatedTweetId,
+            },
+          }
+        : {}),
+    });
+    await queueItem.save();
+
+    return queueItem;
+  } catch (e) {
+    console.error(e);
+    throw new Error('Could not create queueItem');
+  }
+};
+
 export const getPendingItems = async () => {
   logging.debug(`get PENDING items`);
   try {
@@ -27,7 +54,7 @@ export const getPendingItems = async () => {
       item: (await QueueItemModel.findOne(query)
         .sort({ priority: -1, _id: -1 })
         .populate('hashtag')) as QueueItem,
-      count: await QueueItemModel.find(query).count(),
+      count: await QueueItemModel.find(query).countDocuments(),
     };
   } catch (e) {
     console.error(e);
@@ -35,7 +62,7 @@ export const getPendingItems = async () => {
   }
 };
 
-export const startProcessing = async (item: QueueItem, processorId: string) => {
+export const startProcessing = async (item: QueueItem, processorId: string, previous?: boolean) => {
   logging.debug(`Start processing for queueItem ${item._id} and processor ${processorId}`);
   try {
     await QueueItemModel.updateOne(
@@ -44,7 +71,7 @@ export const startProcessing = async (item: QueueItem, processorId: string) => {
     );
     await HashtagModel.updateOne(
       { _id: item.hashtag },
-      { $set: { status: HashtagStatuses.PROCESSING } }
+      { $set: { status: HashtagStatuses[previous ? 'PROCESSING_PREVIOUS' : 'PROCESSING'] } }
     );
     // TODO update Hashtag too
   } catch (e) {
@@ -55,15 +82,21 @@ export const startProcessing = async (item: QueueItem, processorId: string) => {
   }
 };
 
-export const stopProcessing = async (item: QueueItem, processorId: string) => {
+export const stopProcessing = async (
+  item: QueueItem,
+  processorId: string,
+  metadata: { lastEvaluatedTweetId: string }
+) => {
   logging.debug(`Stop processing for queueItem ${item._id} and processor ${processorId}`);
   try {
     await QueueItemModel.updateOne(
       { _id: item._id },
       { $set: { status: QueueItemStatuses.DONE, processorId } }
     );
-    await HashtagModel.updateOne({ _id: item.hashtag }, { $set: { status: HashtagStatuses.DONE } });
-    // TODO update Hashtag too
+    await HashtagModel.updateOne(
+      { _id: item.hashtag },
+      { $set: { status: HashtagStatuses.DONE, metadata } }
+    );
   } catch (e) {
     console.error(e);
     throw new Error(

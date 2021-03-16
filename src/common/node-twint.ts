@@ -4,6 +4,7 @@ import { execCmd } from 'common/cmd-utils';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import rimraf from 'rimraf';
 
 interface ReplyTo {
   screen_name: string;
@@ -12,7 +13,7 @@ interface ReplyTo {
 }
 
 interface Tweet {
-  id: Date;
+  id: string;
   conversation_id: string;
   created_at: string;
   date: string;
@@ -68,11 +69,17 @@ export interface Volumetry {
   };
 }
 
+export interface TwintOptions {
+  resumeFromTweetId?: string;
+}
+
 export default class Twint {
   private tweets: Tweet[];
   private hashtag: string;
   private originalFilePath: string;
   private formattedFilePath: string;
+  private lastEvaluatedTweet?: Tweet;
+  private resumeFromTweetId?: string;
   private dir: string;
   static platformId = 'twitter';
 
@@ -80,10 +87,13 @@ export default class Twint {
     return execCmd('pip show twint | grep Version');
   };
 
-  constructor(hashtag: string) {
+  constructor(hashtag: string, { resumeFromTweetId }: TwintOptions = {}) {
     this.hashtag = hashtag;
     this.dir = path.join(os.tmpdir(), 'information-manipulation-analyzer', hashtag);
-    logging.info(`Creating Twint instance for ${hashtag} in dir ${this.dir}`);
+    this.resumeFromTweetId = resumeFromTweetId;
+    logging.info(
+      `Creating Twint instance for ${hashtag} in dir ${this.dir} with resumeFromTweetId ${this.resumeFromTweetId}`
+    );
     fs.mkdirSync(this.dir, { recursive: true });
     this.originalFilePath = `${this.dir}/original.json`;
     this.formattedFilePath = `${this.dir}/formatted.json`;
@@ -96,23 +106,55 @@ export default class Twint {
     }
 
     if (!fs.existsSync(this.formattedFilePath)) {
-      logging.info(`Download tweets to ${this.formattedFilePath}`);
-      execCmd(`twint -s "${this.hashtag}" --limit 3000 --json -o ${this.originalFilePath}`);
-      execCmd(`(jq -s . < ${this.originalFilePath}) > ${this.formattedFilePath}`);
+      logging.debug(
+        `Download tweets to ${this.formattedFilePath} ${
+          this.resumeFromTweetId ? `and resume from ${this.resumeFromTweetId}` : ''
+        }`
+      );
+      const cmd = `twint -s "${this.hashtag}${
+        this.resumeFromTweetId ? ` max_id:${this.resumeFromTweetId}` : ''
+      }" --limit 3000 --json -o ${this.originalFilePath}`;
+      execCmd(cmd);
+      try {
+        // id are number that are tool big to be parsed by jq so change them in string
+        execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' ${this.originalFilePath}`);
+        // json format given by twint is weird and we need jq to recreate them
+        execCmd(`(jq -s . < ${this.originalFilePath}) > ${this.formattedFilePath}`);
+      } catch (e) {
+        logging.error(e); // eslint-disable-line
+        // TODO either end with error or fallback gently, depending on the error
+        execCmd(`echo "[]" > ${this.formattedFilePath}`);
+      }
     }
-
+    delete require.cache[require.resolve(this.formattedFilePath)];
     this.tweets = require(this.formattedFilePath);
 
+    if (this.resumeFromTweetId) {
+      // when resuming, first tweet is the same as last previous tweet so skip it
+      this.tweets.pop();
+    }
+
+    // DEBUG
+    // this.tweets.forEach((tweet, i) => {
+    //   console.log(i, tweet?.id, tweet?.date, tweet?.time, tweet?.username, tweet?.tweet);
+    // });
     return this.tweets;
   };
 
   public getVolumetry = () => {
-    logging.info(`Get volumetry for #${this.hashtag}`);
+    logging.info(
+      `Get volumetry for #${this.hashtag} ${
+        this.resumeFromTweetId ? `from tweetId: ${this.resumeFromTweetId}` : ''
+      }`
+    );
     const volumetry = this.tweets.reduce((acc: Volumetry, tweet) => {
       const date = `${tweet.created_at.substr(0, 13)}:00:00`;
 
       const associatedHashtags = acc[date]?.associatedHashtags || {};
       tweet.hashtags.forEach((hashtag) => {
+        if (hashtag === this.hashtag) {
+          return;
+        }
         associatedHashtags[hashtag] = (associatedHashtags[hashtag] || 0) + 1;
       });
 
@@ -135,27 +177,18 @@ export default class Twint {
         },
       };
     }, {});
+    this.lastEvaluatedTweet = this.tweets[this.tweets.length - 1];
 
     return volumetry;
   };
 
-  public getFirstOccurence = () => {
-    logging.info(`Get First occurence for #${this.hashtag}`);
+  public getLastEvaluatedTweet = () => {
+    logging.info(`Get Last Evaluated tweet`);
+    return this.lastEvaluatedTweet;
+  };
 
-    // const volumetry = this.tweets.reduce((acc: Volumetry, tweet) => {
-    //   const date = `${tweet.created_at.substr(0, 13)}:00:00`;
-    //   return {
-    //     ...acc,
-    //     [date]: {
-    //       tweets: (acc[date]?.tweets || 0) + 1,
-    //       retweets: (acc[date]?.retweets || 0) + tweet.retweets_count,
-    //       usernames: {
-    //         ...(acc[date]?.usernames || {}),
-    //         [tweet.username]: (acc[date]?.usernames[tweet.username] || 0) + 1,
-    //       },
-    //     },
-    //   };
-    // }, {});
-    return '';
+  public purge = () => {
+    logging.info(`Remove ${this.dir}`);
+    rimraf.sync(this.dir);
   };
 }
