@@ -1,6 +1,8 @@
-import * as mongoose from 'mongoose';
-import { QueueItemActionTypes, QueueItemStatuses } from '../interfaces';
 import './Hashtag';
+
+import * as mongoose from 'mongoose';
+
+import { QueueItemActionTypes, QueueItemStatuses } from '../interfaces';
 
 const { Schema } = mongoose;
 

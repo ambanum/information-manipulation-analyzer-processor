@@ -1,7 +1,9 @@
 import * as logging from 'common/logging';
-import QueueItemModel from '../models/QueueItem';
+
+import { HashtagStatuses, QueueItem, QueueItemActionTypes, QueueItemStatuses } from '../interfaces';
+
 import HashtagModel from '../models/Hashtag';
-import { QueueItemActionTypes, QueueItemStatuses, QueueItem, HashtagStatuses } from '../interfaces';
+import QueueItemModel from '../models/QueueItem';
 
 export const resetOutdated = async (processorId: string) => {
   logging.debug(`reset outdated items for processorId ${processorId}`);

@@ -1,4 +1,5 @@
 import * as logging from 'common/logging';
+
 import { execSync } from 'child_process';
 
 export const execCmd = (cmd: string): string => {

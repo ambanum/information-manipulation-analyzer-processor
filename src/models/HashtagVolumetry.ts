@@ -1,5 +1,6 @@
-import * as mongoose from 'mongoose';
 import './Hashtag';
+
+import * as mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 

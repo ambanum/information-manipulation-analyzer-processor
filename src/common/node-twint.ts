@@ -1,5 +1,6 @@
-import { execCmd } from 'common/cmd-utils';
 import * as logging from 'common/logging';
+
+import { execCmd } from 'common/cmd-utils';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';

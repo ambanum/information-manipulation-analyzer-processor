@@ -1,4 +1,5 @@
 import * as logging from 'common/logging';
+
 import HashtagModel from 'models/Hashtag';
 
 export const up = async (hashtag: string, volumetry: Volumetry, platformId: string) => {

@@ -1,5 +1,6 @@
-import * as logging from 'common/logging';
 import * as fs from 'fs';
+import * as logging from 'common/logging';
+
 import rimraf from 'rimraf';
 
 export const removeFile = (filePath: string) => {
