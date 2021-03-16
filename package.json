@@ -5,12 +5,11 @@
   "author": "Martin Ratinaud <martinratinaud@gmail.com>",
   "license": "MIT",
   "private": false,
-  "type": "module",
   "prettier": "prettier-config-ambanum",
   "scripts": {
     "build": "tsc src/**/*",
     "start": "NODE_PATH=src ts-node src/index.ts",
-    "dev": "NODE_PATH=src ts-node-dev src/index.ts",
+    "dev": "NODE_PATH=src node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts",
     "docker:build": "docker build -t information-manipulation-analyzer-processor .",
     "docker:run": "docker rm information-manipulation-analyzer-processor && docker run -e DATABASE_URL=mongodb://host.docker.internal:27017/splitter-dev --name information-manipulation-analyzer-processor -it information-manipulation-analyzer-processor",
     "docker:ssh": "docker exec -it information-manipulation-analyzer-processor /bin/bash"
@@ -27,6 +26,7 @@
     "@types/node": "^14.14.32",
     "prettier": "^2.2.1",
     "prettier-config-ambanum": "^1.0.1",
-    "ts-node-dev": "^1.1.6"
+    "ts-node-dev": "^1.1.6",
+    "tsconfig-paths": "^3.9.0"
   }
 }
