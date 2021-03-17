@@ -26,6 +26,10 @@ const schema = new Schema(
         index: true,
       },
     },
+    firstOccurenceDate: {
+      type: Date,
+      index: true,
+    },
   },
   {
     strict: 'throw',

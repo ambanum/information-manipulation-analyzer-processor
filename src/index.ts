@@ -40,15 +40,23 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 
     await HashtagVolumetryManager.batchUpsert(item.hashtag._id, volumetry, Twint.platformId);
 
-    const lastEvaluatedTweetId = scraper.getLastEvaluatedTweet()?.id;
+    const lastEvaluatedTweet = scraper.getLastEvaluatedTweet();
+    const lastEvaluatedTweetId = lastEvaluatedTweet?.id;
+    const newHashtagData: any = {
+      metadata: { lastEvaluatedTweetId },
+    };
+
     if (lastEvaluatedTweetId !== lastProcessedTweetId) {
       // There might be some more data to retrieve
       await QueueItemManager.create(item.hashtag._id, {
         lastEvaluatedTweetId,
       });
+    } else {
+      // This is the last occurence of all times
+      newHashtagData.firstOccurenceDate = lastEvaluatedTweet.created_at;
     }
 
-    await QueueItemManager.stopProcessing(item, PROCESSOR_ID, { lastEvaluatedTweetId });
+    await QueueItemManager.stopProcessing(item, PROCESSOR_ID, newHashtagData);
 
     logging.info(`Item ${item._id} processing is done, waiting ${WAIT_TIME / 1000}s`);
     return setTimeout(() => {

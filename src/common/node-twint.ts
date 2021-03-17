@@ -129,7 +129,7 @@ export default class Twint {
     delete require.cache[require.resolve(this.formattedFilePath)];
     this.tweets = require(this.formattedFilePath);
 
-    if (this.resumeFromTweetId) {
+    if (this.resumeFromTweetId && this.tweets.length > 1) {
       // when resuming, first tweet is the same as last previous tweet so skip it
       this.tweets.pop();
     }
@@ -143,7 +143,7 @@ export default class Twint {
 
   public getVolumetry = () => {
     logging.info(
-      `Get volumetry for #${this.hashtag} ${
+      `Formatting ${this.tweets.length} into volumetry for #${this.hashtag} ${
         this.resumeFromTweetId ? `from tweetId: ${this.resumeFromTweetId}` : ''
       }`
     );

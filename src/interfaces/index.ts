@@ -27,6 +27,7 @@ export interface Hashtag {
   metadata?: {
     lastEvaluatedTweetId?: string;
   };
+  firstOccurenceDate?: string;
 }
 
 export interface GetHashtagsResponse extends CommonResponse {

@@ -85,7 +85,7 @@ export const startProcessing = async (item: QueueItem, processorId: string, prev
 export const stopProcessing = async (
   item: QueueItem,
   processorId: string,
-  metadata: { lastEvaluatedTweetId: string }
+  hashtagData: { metadata?: { lastEvaluatedTweetId: string }; firstOccurenceDate: string }
 ) => {
   logging.debug(`Stop processing for queueItem ${item._id} and processor ${processorId}`);
   try {
@@ -95,7 +95,7 @@ export const stopProcessing = async (
     );
     await HashtagModel.updateOne(
       { _id: item.hashtag },
-      { $set: { status: HashtagStatuses.DONE, metadata } }
+      { $set: { status: HashtagStatuses.DONE, ...hashtagData } }
     );
   } catch (e) {
     console.error(e);
