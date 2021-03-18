@@ -24,7 +24,7 @@ export const create = async (
 ) => {
   try {
     const queueItem = new QueueItemModel({
-      priority: lastEvaluatedTweetId ? 1 : 2,
+      priority: lastEvaluatedTweetId ? 2 : 1,
       action: QueueItemActionTypes.HASHTAG,
       status: QueueItemStatuses.PENDING,
       hashtag,
@@ -52,7 +52,7 @@ export const getPendingItems = async () => {
 
     return {
       item: (await QueueItemModel.findOne(query)
-        .sort({ priority: -1, _id: -1 })
+        .sort({ priority: 1, _id: -1 })
         .populate('hashtag')) as QueueItem,
       count: await QueueItemModel.find(query).countDocuments(),
     };
