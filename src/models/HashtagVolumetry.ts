@@ -41,7 +41,7 @@ const schema = new Schema(
       enum: 'twitter',
       default: 'twitter',
     },
-    hashtag: { type: Schema.Types.ObjectId, ref: 'Hashtag' },
+    hashtag: { type: Schema.Types.ObjectId, ref: 'Hashtag', index: true },
   },
   {
     strict: 'throw',
