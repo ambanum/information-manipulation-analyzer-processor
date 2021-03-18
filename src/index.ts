@@ -2,6 +2,7 @@ import * as HashtagVolumetryManager from 'managers/HashtagVolumetryManager';
 import * as QueueItemManager from 'managers/QueueItemManager';
 import * as logging from 'common/logging';
 
+import { HashtagStatuses } from 'interfaces';
 import Twint from 'common/node-twint';
 import dbConnect from 'common/db';
 // @ts-ignore
@@ -51,12 +52,14 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
       await QueueItemManager.create(item.hashtag._id, {
         lastEvaluatedTweetId,
       });
+      newHashtagData.status = HashtagStatuses.PROCESSING_PREVIOUS;
+
+      await QueueItemManager.stopProcessing(item, PROCESSOR_ID, newHashtagData);
     } else {
       // This is the last occurence of all times
       newHashtagData.firstOccurenceDate = lastEvaluatedTweet.created_at;
+      await QueueItemManager.stopProcessing(item, PROCESSOR_ID, newHashtagData);
     }
-
-    await QueueItemManager.stopProcessing(item, PROCESSOR_ID, newHashtagData);
 
     logging.info(`Item ${item._id} processing is done, waiting ${WAIT_TIME / 1000}s`);
     return setTimeout(() => {

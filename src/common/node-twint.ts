@@ -73,7 +73,8 @@ export interface TwintOptions {
   resumeFromTweetId?: string;
 }
 
-const NB_TWEETS_SCRAPED = 5000;
+const NB_TWEETS_SCRAPED_FIRST_TIME = 1000;
+const NB_TWEETS_SCRAPED = 3000;
 
 export default class Twint {
   private tweets: Tweet[];
@@ -115,7 +116,9 @@ export default class Twint {
       );
       const cmd = `twint -s "${this.hashtag}${
         this.resumeFromTweetId ? ` max_id:${this.resumeFromTweetId}` : ''
-      }" --limit ${NB_TWEETS_SCRAPED} --json -o ${this.originalFilePath}`;
+      }" --limit ${
+        this.resumeFromTweetId ? NB_TWEETS_SCRAPED : NB_TWEETS_SCRAPED_FIRST_TIME
+      } --json -o ${this.originalFilePath}`;
       execCmd(cmd);
       try {
         // id are number that are tool big to be parsed by jq so change them in string
@@ -149,6 +152,8 @@ export default class Twint {
         this.resumeFromTweetId ? `from tweetId: ${this.resumeFromTweetId}` : ''
       }`
     );
+
+    // FIXME PERF REDUCE
     const volumetry = this.tweets.reduce((acc: Volumetry, tweet) => {
       const date = `${tweet.created_at.substr(0, 13)}:00:00`;
 
