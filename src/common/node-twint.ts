@@ -73,6 +73,8 @@ export interface TwintOptions {
   resumeFromTweetId?: string;
 }
 
+const NB_TWEETS_SCRAPED = 5000;
+
 export default class Twint {
   private tweets: Tweet[];
   private hashtag: string;
@@ -113,7 +115,7 @@ export default class Twint {
       );
       const cmd = `twint -s "${this.hashtag}${
         this.resumeFromTweetId ? ` max_id:${this.resumeFromTweetId}` : ''
-      }" --limit 3000 --json -o ${this.originalFilePath}`;
+      }" --limit ${NB_TWEETS_SCRAPED} --json -o ${this.originalFilePath}`;
       execCmd(cmd);
       try {
         // id are number that are tool big to be parsed by jq so change them in string
@@ -183,7 +185,9 @@ export default class Twint {
   };
 
   public getLastEvaluatedTweet = () => {
-    logging.info(`Get Last Evaluated tweet for ${this.hashtag} ${this.lastEvaluatedTweet.created_at}`);
+    logging.info(
+      `Get Last Evaluated tweet for ${this.hashtag} ${this.lastEvaluatedTweet.created_at}`
+    );
     return this.lastEvaluatedTweet;
   };
 
