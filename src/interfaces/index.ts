@@ -56,6 +56,7 @@ export enum QueueItemStatuses {
 export interface QueueItem {
   _id: string;
   name: string;
+  priority: number;
   action: QueueItemActionTypes;
   status: QueueItemStatuses;
   hashtag: Hashtag;

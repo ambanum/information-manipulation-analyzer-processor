@@ -43,14 +43,29 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 
     const lastEvaluatedTweet = scraper.getLastEvaluatedTweet();
     const lastEvaluatedTweetId = lastEvaluatedTweet?.id;
-    const newHashtagData: any = {
-      metadata: { lastEvaluatedTweetId },
-    };
+    const lastEvaluatedTweetCreatedAt = lastEvaluatedTweet?.created_at;
+
+    const newHashtagData: Partial<Parameters<typeof QueueItemManager.stopProcessing>>[2] = {};
+
+    if (lastEvaluatedTweetId) {
+      // This to prevent overwriting the lastEvaluatedTweetId in case there is a problem
+      newHashtagData.metadata = { lastEvaluatedTweetId };
+    }
+
+    if (lastEvaluatedTweetCreatedAt) {
+      newHashtagData.oldestProcessedDate = lastEvaluatedTweetCreatedAt;
+
+      if (!lastProcessedTweetId) {
+        // this is the first time we make the request
+        newHashtagData.newestProcessedDate = new Date();
+      }
+    }
 
     if (lastEvaluatedTweetId !== lastProcessedTweetId) {
       // There might be some more data to retrieve
       await QueueItemManager.create(item.hashtag._id, {
         lastEvaluatedTweetId,
+        priority: item.priority + 1,
       });
       newHashtagData.status = HashtagStatuses.PROCESSING_PREVIOUS;
 
@@ -62,6 +77,7 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
     }
 
     logging.info(`Item ${item._id} processing is done, waiting ${WAIT_TIME / 1000}s`);
+
     return setTimeout(() => {
       scraper.purge();
       return process.nextTick(poll.bind(this));

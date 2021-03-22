@@ -191,7 +191,7 @@ export default class Twint {
 
   public getLastEvaluatedTweet = () => {
     logging.info(
-      `Get Last Evaluated tweet for ${this.hashtag} ${this.lastEvaluatedTweet.created_at}`
+      `Get Last Evaluated tweet for ${this.hashtag} ${this.lastEvaluatedTweet?.created_at}`
     );
     return this.lastEvaluatedTweet;
   };

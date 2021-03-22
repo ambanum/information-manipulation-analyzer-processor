@@ -18,13 +18,23 @@ export const resetOutdated = async (processorId: string) => {
   }
 };
 
+export const PRIORITIES = {
+  NOW: 0,
+  URGENT: 1,
+  HIGH: 2,
+  MEDIUM: 3,
+};
+
 export const create = async (
   hashtag: string,
-  { lastEvaluatedTweetId }: { lastEvaluatedTweetId?: string } = {}
+  {
+    lastEvaluatedTweetId,
+    priority = PRIORITIES.NOW,
+  }: { lastEvaluatedTweetId?: string; priority?: number } = {}
 ) => {
   try {
     const queueItem = new QueueItemModel({
-      priority: lastEvaluatedTweetId ? 2 : 1,
+      priority,
       action: QueueItemActionTypes.HASHTAG,
       status: QueueItemStatuses.PENDING,
       hashtag,
@@ -63,7 +73,9 @@ export const getPendingItems = async () => {
 };
 
 export const startProcessing = async (item: QueueItem, processorId: string, previous?: boolean) => {
-  logging.debug(`Start processing for queueItem ${item._id} and processor ${processorId}`);
+  logging.debug(
+    `Start processing for queueItem ${item._id} (pr:${item.priority}) and processor ${processorId}`
+  );
   try {
     await QueueItemModel.updateOne(
       { _id: item._id },
@@ -86,8 +98,10 @@ export const stopProcessing = async (
   item: QueueItem,
   processorId: string,
   hashtagData: {
-    metadata?: { lastEvaluatedTweetId: string };
-    firstOccurenceDate: string;
+    metadata?: { lastEvaluatedTweetId?: string };
+    firstOccurenceDate?: string;
+    newestProcessedDate?: string | Date;
+    oldestProcessedDate?: string | Date;
     status?: HashtagStatuses;
   }
 ) => {

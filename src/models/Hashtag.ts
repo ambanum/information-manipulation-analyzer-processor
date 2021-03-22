@@ -30,6 +30,14 @@ const schema = new Schema(
       type: Date,
       index: true,
     },
+    oldestProcessedDate: {
+      type: Date,
+      index: true,
+    },
+    newestProcessedDate: {
+      type: Date,
+      index: true,
+    },
   },
   {
     strict: 'throw',
