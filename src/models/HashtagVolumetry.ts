@@ -1,10 +1,21 @@
-import './Hashtag';
+import { Document, Model, Schema, model } from 'mongoose';
 
-import * as mongoose from 'mongoose';
+import { Hashtag } from './Hashtag';
 
-const { Schema } = mongoose;
+export interface HashtagVolumetry extends Document {
+  date: string;
+  nbTweets?: number;
+  nbRetweets?: number;
+  nbLikes?: number;
+  nbQuotes?: number;
+  languages?: { [key: string]: number };
+  usernames?: { [key: string]: number };
+  associatedHashtags?: { [key: string]: number };
+  platformId?: 'twitter';
+  hashtag?: Hashtag;
+}
 
-const schema = new Schema(
+const HashtagVolumetrySchema = new Schema(
   {
     date: {
       type: Date,
@@ -31,9 +42,9 @@ const schema = new Schema(
       required: true,
       index: true,
     },
-    languages: { type: mongoose.Schema.Types.Mixed, default: {} },
-    usernames: { type: mongoose.Schema.Types.Mixed, default: {} },
-    associatedHashtags: { type: mongoose.Schema.Types.Mixed, default: {} },
+    languages: { type: Schema.Types.Mixed, default: {} },
+    usernames: { type: Schema.Types.Mixed, default: {} },
+    associatedHashtags: { type: Schema.Types.Mixed, default: {} },
     platformId: {
       type: String,
       required: true,
@@ -49,4 +60,9 @@ const schema = new Schema(
   }
 );
 
-export default mongoose?.models?.HashtagVolumetry || mongoose.model('HashtagVolumetry', schema);
+const HashtagVolumetryModel: Model<HashtagVolumetry> = model(
+  'HashtagVolumetry',
+  HashtagVolumetrySchema
+);
+
+export default HashtagVolumetryModel;

@@ -1,13 +1,26 @@
-import * as mongoose from 'mongoose';
+import { Document, Model, Schema, model } from 'mongoose';
 
-const { Schema } = mongoose;
-
-enum hashtagStatuses {
+export enum HashtagStatuses {
   PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  DONE_FIRST_FETCH = 'DONE_FIRST_FETCH',
+  PROCESSING_PREVIOUS = 'PROCESSING_PREVIOUS',
   DONE = 'DONE',
+  DONE_ERROR = 'DONE_ERROR',
 }
 
-const schema = new Schema(
+export interface Hashtag extends Document {
+  name: string;
+  status: HashtagStatuses;
+  metadata?: {
+    lastEvaluatedTweetId?: string;
+  };
+  firstOccurenceDate?: string | Date;
+  oldestProcessedDate?: string | Date;
+  newestProcessedDate?: string | Date;
+}
+
+const HashtagSchema = new Schema(
   {
     name: {
       type: String,
@@ -18,7 +31,7 @@ const schema = new Schema(
       type: String,
       required: true,
       index: true,
-      enum: Object.values(hashtagStatuses),
+      enum: Object.values(HashtagStatuses),
     },
     metadata: {
       lastEvaluatedTweetId: {
@@ -45,4 +58,6 @@ const schema = new Schema(
   }
 );
 
-export default mongoose?.models?.Hashtag || mongoose.model('Hashtag', schema);
+const HashtagModel: Model<Hashtag> = model('Hashtag', HashtagSchema);
+
+export default HashtagModel;

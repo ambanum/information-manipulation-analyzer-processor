@@ -1,12 +1,30 @@
-import './Hashtag';
+import { Document, Model, Schema, model } from 'mongoose';
 
-import * as mongoose from 'mongoose';
+import { Hashtag } from './Hashtag';
 
-import { QueueItemActionTypes, QueueItemStatuses } from '../interfaces';
+export enum QueueItemActionTypes {
+  HASHTAG = 'HASHTAG',
+}
 
-const { Schema } = mongoose;
+export enum QueueItemStatuses {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  DONE = 'DONE',
+  DONE_ERROR = 'DONE_ERROR',
+}
 
-const schema = new Schema(
+export interface QueueItem extends Document {
+  name: string;
+  priority: number;
+  action: QueueItemActionTypes;
+  status: QueueItemStatuses;
+  hashtag: Hashtag;
+  metadata?: {
+    lastEvaluatedTweetId?: string;
+  };
+}
+
+const QueueItemSchema = new Schema(
   {
     action: {
       type: String,
@@ -44,4 +62,6 @@ const schema = new Schema(
   }
 );
 
-export default mongoose?.models?.QueueItem || mongoose.model('QueueItem', schema);
+const QueueItemModel: Model<QueueItem> = model('QueueItem', QueueItemSchema);
+
+export default QueueItemModel;

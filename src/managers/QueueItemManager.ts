@@ -1,8 +1,14 @@
 import * as logging from 'common/logging';
 
-import { HashtagStatuses, QueueItem, QueueItemActionTypes, QueueItemStatuses } from '../interfaces';
+import { ClientSession, FilterQuery } from 'mongoose';
+import {
+  Hashtag,
+  HashtagStatuses,
+  QueueItem,
+  QueueItemActionTypes,
+  QueueItemStatuses,
+} from '../interfaces';
 
-import { ClientSession } from 'mongoose';
 import HashtagModel from '../models/Hashtag';
 import QueueItemModel from '../models/QueueItem';
 
@@ -10,8 +16,8 @@ export const resetOutdated = async (processorId: string) => {
   logging.debug(`reset outdated items for processorId ${processorId}`);
   try {
     return QueueItemModel.updateMany(
-      { status: 'PROCESSING', processorId },
-      { $set: { status: 'PENDING', processorId: null } }
+      { status: QueueItemStatuses.PROCESSING, processorId },
+      { $set: { status: QueueItemStatuses.PENDING, processorId: null } }
     );
   } catch (e) {
     logging.error(e);
@@ -63,7 +69,7 @@ export const create = (session?: ClientSession) => async (
 export const getPendingItems = async () => {
   logging.debug(`get PENDING items`);
   try {
-    const query = { status: 'PENDING' };
+    const query: FilterQuery<QueueItem> = { status: QueueItemStatuses.PENDING };
 
     return {
       item: (await QueueItemModel.findOne(query)
@@ -102,13 +108,7 @@ export const startProcessing = async (item: QueueItem, processorId: string, prev
 export const stopProcessing = (session: ClientSession) => async (
   item: QueueItem,
   processorId: string,
-  hashtagData: {
-    metadata?: { lastEvaluatedTweetId?: string };
-    firstOccurenceDate?: string;
-    newestProcessedDate?: string | Date;
-    oldestProcessedDate?: string | Date;
-    status?: HashtagStatuses;
-  }
+  hashtagData: Partial<Hashtag>
 ) => {
   logging.debug(`Stop processing for queueItem ${item._id} and processor ${processorId}`);
   try {
