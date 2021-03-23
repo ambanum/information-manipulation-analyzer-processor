@@ -5,6 +5,7 @@
     "module": "commonjs",
     "sourceMap": true,
     "rootDir": "src",
+    "skipLibCheck": true,
     "allowJs": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
