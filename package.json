@@ -11,7 +11,7 @@
     "start": "NODE_PATH=build DEBUG=ima:* node build/index.js",
     "dev": "NODE_PATH=src node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts",
     "docker:build": "docker build -t $npm_package_name .",
-    "docker:run": "(docker rm $npm_package_name || true) && docker run --rm -e MONGODB_URI=mongodb://host.docker.internal:27777/information-manipulation-analyzer-production --name $npm_package_name -it $npm_package_name",
+    "docker:run": "(docker rm $npm_package_name || true) && docker run --rm -e TWINT_PATH=/home/ambnum/.local/bin/twint -e MONGODB_URI=mongodb://host.docker.internal:27777/information-manipulation-analyzer-production --name $npm_package_name -it $npm_package_name",
     "docker:ssh": "docker exec -it $npm_package_name /bin/bash"
   },
   "dependencies": {

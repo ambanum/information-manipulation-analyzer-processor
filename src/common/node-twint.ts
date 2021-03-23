@@ -75,6 +75,7 @@ export interface TwintOptions {
 
 const NB_TWEETS_SCRAPED_FIRST_TIME = 1000;
 const NB_TWEETS_SCRAPED = 3000;
+const TWINT_PATH = process.env.TWINT_PATH || 'twint';
 
 export default class Twint {
   private tweets: Tweet[];
@@ -114,7 +115,7 @@ export default class Twint {
           this.resumeFromTweetId ? `and resume from ${this.resumeFromTweetId}` : ''
         }`
       );
-      const cmd = `twint -s "${this.hashtag}${
+      const cmd = `${TWINT_PATH} -s "${this.hashtag}${
         this.resumeFromTweetId ? ` max_id:${this.resumeFromTweetId}` : ''
       }" --limit ${
         this.resumeFromTweetId ? NB_TWEETS_SCRAPED : NB_TWEETS_SCRAPED_FIRST_TIME
