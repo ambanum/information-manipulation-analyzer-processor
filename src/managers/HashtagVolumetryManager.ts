@@ -31,18 +31,41 @@ export const batchUpsert = (session: ClientSession) => async (
         usernames,
         associatedHashtags,
       } = volumetry[date];
+
+      const languagesInc = Object.keys(languages).reduce(
+        (acc: any, language) => ({
+          ...acc,
+          [`languages.${language}`]: languages[language],
+        }),
+        {}
+      );
+      const usernamesInc = Object.keys(usernames).reduce(
+        (acc: any, username) => ({
+          ...acc,
+          [`usernames.${username}`]: usernames[username],
+        }),
+        {}
+      );
+      const associatedHashtagsInc = Object.keys(associatedHashtags).reduce(
+        (acc: any, associatedHashtag) => ({
+          ...acc,
+          [`associatedHashtags.${associatedHashtag}`]: associatedHashtags[associatedHashtag],
+        }),
+        {}
+      );
+
       return {
         updateOne: {
           filter: { date, platformId, hashtag },
           update: {
-            $set: {
+            $inc: {
               nbTweets: tweets,
               nbRetweets: retweets,
               nbLikes: likes,
               nbQuotes: quotes,
-              languages,
-              usernames,
-              associatedHashtags,
+              ...languagesInc,
+              ...usernamesInc,
+              ...associatedHashtagsInc,
             },
           },
           upsert: true,

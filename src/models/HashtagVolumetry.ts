@@ -31,9 +31,9 @@ const schema = new Schema(
       required: true,
       index: true,
     },
-    languages: { type: mongoose.Schema.Types.Mixed },
-    usernames: { type: mongoose.Schema.Types.Mixed },
-    associatedHashtags: { type: mongoose.Schema.Types.Mixed },
+    languages: { type: mongoose.Schema.Types.Mixed, default: {} },
+    usernames: { type: mongoose.Schema.Types.Mixed, default: {} },
+    associatedHashtags: { type: mongoose.Schema.Types.Mixed, default: {} },
     platformId: {
       type: String,
       required: true,
