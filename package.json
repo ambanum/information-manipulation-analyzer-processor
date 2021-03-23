@@ -8,11 +8,11 @@
   "prettier": "prettier-config-ambanum",
   "scripts": {
     "build": "tsc",
-    "start": "NODE_PATH=src ts-node src/index.ts",
+    "start": "NODE_PATH=build DEBUG=ima:* node build/index.js",
     "dev": "NODE_PATH=src node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts",
-    "docker:build": "docker build -t information-manipulation-analyzer-processor .",
-    "docker:run": "docker rm information-manipulation-analyzer-processor && docker run -e DATABASE_URL=mongodb://host.docker.internal:27017/splitter-dev --name information-manipulation-analyzer-processor -it information-manipulation-analyzer-processor",
-    "docker:ssh": "docker exec -it information-manipulation-analyzer-processor /bin/bash"
+    "docker:build": "docker build -t $npm_package_name .",
+    "docker:run": "(docker rm $npm_package_name || true) && docker run --rm -e MONGODB_URI=mongodb://host.docker.internal:27777/information-manipulation-analyzer-production --name $npm_package_name -it $npm_package_name",
+    "docker:ssh": "docker exec -it $npm_package_name /bin/bash"
   },
   "dependencies": {
     "debug": "^4.3.1",

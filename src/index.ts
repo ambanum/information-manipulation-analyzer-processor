@@ -5,7 +5,6 @@ import * as logging from 'common/logging';
 import { HashtagStatuses } from 'interfaces';
 import Twint from 'common/node-twint';
 import dbConnect from 'common/db';
-import mongoose from 'mongoose';
 // @ts-ignore
 import packageJson from '../package.json';
 
