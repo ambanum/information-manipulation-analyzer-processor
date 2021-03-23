@@ -1,3 +1,4 @@
+import { ClientSession } from 'mongoose';
 import HashtagVolumetryModel from 'models/HashtagVolumetry';
 
 export interface Volumetry {
@@ -12,7 +13,11 @@ export interface Volumetry {
   };
 }
 
-export const batchUpsert = async (hashtag: string, volumetry: Volumetry, platformId: string) => {
+export const batchUpsert = (session: ClientSession) => async (
+  hashtag: string,
+  volumetry: Volumetry,
+  platformId: string
+) => {
   const dates = Object.keys(volumetry);
 
   await HashtagVolumetryModel.bulkWrite(
@@ -41,6 +46,7 @@ export const batchUpsert = async (hashtag: string, volumetry: Volumetry, platfor
             },
           },
           upsert: true,
+          session,
         },
       };
     })

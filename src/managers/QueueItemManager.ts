@@ -2,6 +2,7 @@ import * as logging from 'common/logging';
 
 import { HashtagStatuses, QueueItem, QueueItemActionTypes, QueueItemStatuses } from '../interfaces';
 
+import { ClientSession } from 'mongoose';
 import HashtagModel from '../models/Hashtag';
 import QueueItemModel from '../models/QueueItem';
 
@@ -25,7 +26,7 @@ export const PRIORITIES = {
   MEDIUM: 3,
 };
 
-export const create = async (
+export const create = (session?: ClientSession) => async (
   hashtag: string,
   {
     lastEvaluatedTweetId,
@@ -33,22 +34,26 @@ export const create = async (
   }: { lastEvaluatedTweetId?: string; priority?: number } = {}
 ) => {
   try {
-    const queueItem = new QueueItemModel({
-      priority,
-      action: QueueItemActionTypes.HASHTAG,
-      status: QueueItemStatuses.PENDING,
-      hashtag,
-      ...(lastEvaluatedTweetId
-        ? {
-            metadata: {
-              lastEvaluatedTweetId,
-            },
-          }
-        : {}),
-    });
-    await queueItem.save();
+    const queueItems = await QueueItemModel.create(
+      [
+        {
+          priority,
+          action: QueueItemActionTypes.HASHTAG,
+          status: QueueItemStatuses.PENDING,
+          hashtag,
+          ...(lastEvaluatedTweetId
+            ? {
+                metadata: {
+                  lastEvaluatedTweetId,
+                },
+              }
+            : {}),
+        },
+      ],
+      session ? { session } : {}
+    );
 
-    return queueItem;
+    return queueItems[0];
   } catch (e) {
     console.error(e);
     throw new Error('Could not create queueItem');
@@ -94,7 +99,7 @@ export const startProcessing = async (item: QueueItem, processorId: string, prev
   }
 };
 
-export const stopProcessing = async (
+export const stopProcessing = (session: ClientSession) => async (
   item: QueueItem,
   processorId: string,
   hashtagData: {
@@ -109,12 +114,14 @@ export const stopProcessing = async (
   try {
     await QueueItemModel.updateOne(
       { _id: item._id },
-      { $set: { status: QueueItemStatuses.DONE, processorId } }
+      { $set: { status: QueueItemStatuses.DONE, processorId } },
+      session ? { session } : {}
     );
 
     await HashtagModel.updateOne(
       { _id: item.hashtag },
-      { $set: { status: HashtagStatuses.DONE, ...hashtagData } }
+      { $set: { status: HashtagStatuses.DONE, ...hashtagData } },
+      session ? { session } : {}
     );
   } catch (e) {
     console.error(e);

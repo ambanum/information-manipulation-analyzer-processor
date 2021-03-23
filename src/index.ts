@@ -5,12 +5,13 @@ import * as logging from 'common/logging';
 import { HashtagStatuses } from 'interfaces';
 import Twint from 'common/node-twint';
 import dbConnect from 'common/db';
+import mongoose from 'mongoose';
 // @ts-ignore
 import packageJson from '../package.json';
 
 const { version } = packageJson;
 
-const WAIT_TIME = 10000; // 10s
+const WAIT_TIME = 1000; // 10s
 const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 
 (async () => {
@@ -39,13 +40,13 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
     const scraper = new Twint(item.hashtag.name, { resumeFromTweetId: lastProcessedTweetId });
     const volumetry = scraper.getVolumetry();
 
-    await HashtagVolumetryManager.batchUpsert(item.hashtag._id, volumetry, Twint.platformId);
-
     const lastEvaluatedTweet = scraper.getLastEvaluatedTweet();
     const lastEvaluatedTweetId = lastEvaluatedTweet?.id;
     const lastEvaluatedTweetCreatedAt = lastEvaluatedTweet?.created_at;
 
-    const newHashtagData: Partial<Parameters<typeof QueueItemManager.stopProcessing>>[2] = {};
+    const newHashtagData: Partial<
+      Parameters<ReturnType<typeof QueueItemManager.stopProcessing>>
+    >[2] = {};
 
     if (lastEvaluatedTweetId) {
       // This to prevent overwriting the lastEvaluatedTweetId in case there is a problem
@@ -60,26 +61,43 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
         newHashtagData.newestProcessedDate = new Date();
       }
     }
+    const session = undefined;
+    // const session = await mongoose.startSession();
+    try {
+      // session.startTransaction();
 
-    if (lastEvaluatedTweetId !== lastProcessedTweetId) {
-      // There might be some more data to retrieve
-      await QueueItemManager.create(item.hashtag._id, {
-        lastEvaluatedTweetId,
-        priority: item.priority + 1,
-      });
-      newHashtagData.status = HashtagStatuses.PROCESSING_PREVIOUS;
+      await HashtagVolumetryManager.batchUpsert(session)(
+        item.hashtag._id,
+        volumetry,
+        Twint.platformId
+      );
 
-      await QueueItemManager.stopProcessing(item, PROCESSOR_ID, newHashtagData);
-    } else {
-      // This is the last occurence of all times
-      newHashtagData.firstOccurenceDate = lastEvaluatedTweet.created_at;
-      await QueueItemManager.stopProcessing(item, PROCESSOR_ID, newHashtagData);
+      if (lastEvaluatedTweetId !== lastProcessedTweetId) {
+        // There might be some more data to retrieve
+        await QueueItemManager.create(session)(item.hashtag._id, {
+          lastEvaluatedTweetId,
+          priority: item.priority + 1,
+        });
+        newHashtagData.status = HashtagStatuses.PROCESSING_PREVIOUS;
+        await QueueItemManager.stopProcessing(session)(item, PROCESSOR_ID, newHashtagData);
+      } else {
+        // This is the last occurence of all times
+        newHashtagData.firstOccurenceDate = lastEvaluatedTweet.created_at;
+        await QueueItemManager.stopProcessing(session)(item, PROCESSOR_ID, newHashtagData);
+      }
+      // await session.commitTransaction();
+      scraper.purge();
+      logging.info(`Item ${item._id} processing is done, waiting ${WAIT_TIME / 1000}s`);
+    } catch (e) {
+      // await session.abortTransaction();
+      logging.error(e);
+      logging.error(
+        `Item ${item._id} could not be processed correctly retrying in ${WAIT_TIME / 1000}s`
+      );
     }
-
-    logging.info(`Item ${item._id} processing is done, waiting ${WAIT_TIME / 1000}s`);
+    // session.endSession();
 
     return setTimeout(() => {
-      scraper.purge();
       return process.nextTick(poll.bind(this));
     }, WAIT_TIME);
   };
