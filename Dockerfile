@@ -53,5 +53,4 @@ USER ambnum
 RUN pip3 install --user --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint
 RUN pip show twint | grep Version
 
-# CMD [ "yarn", "start" ]
-CMD [ "/bin/bash" ]
+CMD [ "yarn", "start" ]

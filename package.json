@@ -12,6 +12,7 @@
     "dev": "NODE_PATH=src node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts",
     "docker:build": "docker build -t $npm_package_name .",
     "docker:run": "(docker rm $npm_package_name || true) && docker run --rm -e TWINT_PATH=/home/ambnum/.local/bin/twint -e MONGODB_URI=mongodb://host.docker.internal:27777/information-manipulation-analyzer-production --name $npm_package_name -it $npm_package_name",
+    "docker:run-2": "(docker rm information-manipulation-analyzer-processor-2 || true) && docker run --rm -e PROCESSOR_ID=2 -e TWINT_PATH=/home/ambnum/.local/bin/twint -e MONGODB_URI=mongodb://host.docker.internal:27777/information-manipulation-analyzer-production -e NB_TWEETS_TO_SCRAPE=10000 --name information-manipulation-analyzer-processor-2 -it information-manipulation-analyzer-processor",
     "docker:ssh": "docker exec -it $npm_package_name /bin/bash"
   },
   "dependencies": {

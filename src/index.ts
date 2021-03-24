@@ -12,6 +12,7 @@ const { version } = packageJson;
 
 const WAIT_TIME = 1000; // 10s
 const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
+const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
 
 (async () => {
   logging.info(`Launching processor in version ${version}`);
@@ -36,7 +37,10 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 
     const lastProcessedTweetId = item.hashtag?.metadata?.lastEvaluatedTweetId;
 
-    const scraper = new Twint(item.hashtag.name, { resumeFromTweetId: lastProcessedTweetId });
+    const scraper = new Twint(item.hashtag.name, {
+      resumeFromTweetId: lastProcessedTweetId,
+      nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
+    });
     const volumetry = scraper.getVolumetry();
 
     const lastEvaluatedTweet = scraper.getLastEvaluatedTweet();

@@ -71,10 +71,12 @@ export interface Volumetry {
 
 export interface TwintOptions {
   resumeFromTweetId?: string;
+  nbTweetsToScrapeFirstTime?: number;
+  nbTweetsToScrape?: number;
 }
 
-const NB_TWEETS_SCRAPED_FIRST_TIME = 1000;
-const NB_TWEETS_SCRAPED = 3000;
+const NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT = 1000;
+const NB_TWEETS_TO_SCRAPE_DEFAULT = 3000;
 const TWINT_PATH = process.env.TWINT_PATH || 'twint';
 
 export default class Twint {
@@ -83,6 +85,7 @@ export default class Twint {
   private originalFilePath: string;
   private formattedFilePath: string;
   private lastEvaluatedTweet?: Tweet;
+  private nbTweetsToScrape?: number;
   private resumeFromTweetId?: string;
   private dir: string;
   static platformId = 'twitter';
@@ -91,7 +94,14 @@ export default class Twint {
     return execCmd('pip show twint | grep Version');
   };
 
-  constructor(hashtag: string, { resumeFromTweetId }: TwintOptions = {}) {
+  constructor(
+    hashtag: string,
+    {
+      resumeFromTweetId,
+      nbTweetsToScrapeFirstTime = NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT,
+      nbTweetsToScrape = NB_TWEETS_TO_SCRAPE_DEFAULT,
+    }: TwintOptions = {}
+  ) {
     this.hashtag = hashtag;
     this.dir = path.join(os.tmpdir(), 'information-manipulation-analyzer', hashtag);
     this.resumeFromTweetId = resumeFromTweetId;
@@ -101,6 +111,7 @@ export default class Twint {
     fs.mkdirSync(this.dir, { recursive: true });
     this.originalFilePath = `${this.dir}/original.json`;
     this.formattedFilePath = `${this.dir}/formatted.json`;
+    this.nbTweetsToScrape = !resumeFromTweetId ? nbTweetsToScrapeFirstTime : nbTweetsToScrape;
     this.downloadTweets();
   }
 
@@ -115,11 +126,9 @@ export default class Twint {
           this.resumeFromTweetId ? `and resume from ${this.resumeFromTweetId}` : ''
         }`
       );
-      const cmd = `${TWINT_PATH} -s "${this.hashtag}${
+      const cmd = `${TWINT_PATH} -s "#${this.hashtag}${
         this.resumeFromTweetId ? ` max_id:${this.resumeFromTweetId}` : ''
-      }" --limit ${
-        this.resumeFromTweetId ? NB_TWEETS_SCRAPED : NB_TWEETS_SCRAPED_FIRST_TIME
-      } --json -o ${this.originalFilePath}`;
+      }" --limit ${this.nbTweetsToScrape} --json -o ${this.originalFilePath}`;
       execCmd(cmd);
       try {
         // id are number that are tool big to be parsed by jq so change them in string
