@@ -18,6 +18,7 @@
   community.general.docker_image:
     source: build
     build:
+      network: host
       pull: yes
       args:
         ENV_FILE: '{{ env_file }}'
