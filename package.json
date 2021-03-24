@@ -9,14 +9,19 @@
   "scripts": {
     "build": "tsc",
     "start": "NODE_PATH=build DEBUG=ima:* node build/index.js",
-    "dev": "NODE_PATH=src node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts",
+    "dev": "node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts",
+    "deploy:vagrant:preproduction": "ansible-playbook ops/site.yml -i ops/inventories/dev.yml -e \"ENV=preproduction\" -e \"ENV_FILE=.env.vagrant.preproduction\" -e \"BRANCH=main\"",
+    "deploy:vagrant:production": "ansible-playbook ops/site.yml -i ops/inventories/dev.yml -e \"ENV=production\" -e \"ENV_FILE=.env.vagrant.production\" -e \"BRANCH=main\"",
+    "deploy:preproduction": "ansible-playbook ops/site.yml -i ops/inventories/production.yml -e \"ENV=preproduction\"",
+    "deploy:production": "ansible-playbook ops/site.yml -i ops/inventories/production.yml -e \"ENV=production\"",
     "docker:build": "docker build -t $npm_package_name .",
-    "docker:run": "(docker rm $npm_package_name || true) && docker run --rm -e TWINT_PATH=/home/ambnum/.local/bin/twint -e MONGODB_URI=mongodb://host.docker.internal:27777/information-manipulation-analyzer-production --name $npm_package_name -it $npm_package_name",
+    "docker:run": "(docker rm $npm_package_name || true) && docker run --rm -e TWINT_PATH=/home/ambnum/.local/bin/twint --name $npm_package_name -it $npm_package_name",
     "docker:run-2": "(docker rm information-manipulation-analyzer-processor-2 || true) && docker run --rm -e PROCESSOR_ID=2 -e TWINT_PATH=/home/ambnum/.local/bin/twint -e MONGODB_URI=mongodb://host.docker.internal:27777/information-manipulation-analyzer-production -e NB_TWEETS_TO_SCRAPE=10000 --name information-manipulation-analyzer-processor-2 -it information-manipulation-analyzer-processor",
     "docker:ssh": "docker exec -it $npm_package_name /bin/bash"
   },
   "dependencies": {
     "debug": "^4.3.1",
+    "dotenv": "^8.2.0",
     "mongoose": "^5.11.19",
     "rimraf": "^3.0.2",
     "ts-node": "^9.1.1",

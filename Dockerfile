@@ -1,5 +1,7 @@
 FROM python:3.7-slim-stretch
 
+ARG ENV_FILE=".env.production"
+
 # Create folder and user
 RUN adduser ambnum && \
   chmod 777 /home/ambnum && \
@@ -34,6 +36,8 @@ RUN yarn
 
 # install microservice code
 COPY . /home/ambnum/
+RUN rm .env.*
+COPY ./$ENV_FILE /home/ambnum/.env.production
 RUN yarn build
 RUN chmod 777 /home/ambnum/build && \
   chown ambnum:ambnum /home/ambnum/build

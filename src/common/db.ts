@@ -1,5 +1,3 @@
-import './bootstrap';
-
 // import config from 'config';
 import * as logging from 'common/logging';
 

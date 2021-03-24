@@ -1,3 +1,5 @@
+import './common/bootstrap';
+
 import * as HashtagVolumetryManager from 'managers/HashtagVolumetryManager';
 import * as QueueItemManager from 'managers/QueueItemManager';
 import * as logging from 'common/logging';
