@@ -1,4 +1,5 @@
 import { Hashtag as ModelHashtag } from 'models/Hashtag';
+import { Processor as ModelProcessor } from 'models/Processor';
 import { QueueItem as ModelQueueItem } from 'models/QueueItem';
 
 export { HashtagStatuses } from 'models/Hashtag';
@@ -31,3 +32,8 @@ export interface CreateHashtagInput extends CommonResponse {
  * QueueItem
  */
 export type QueueItem = ModelQueueItem;
+
+/**
+ * Processor
+ */
+export type Processor = ModelProcessor;

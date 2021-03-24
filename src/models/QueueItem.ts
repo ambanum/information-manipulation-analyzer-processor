@@ -19,6 +19,7 @@ export interface QueueItem extends Document {
   action: QueueItemActionTypes;
   status: QueueItemStatuses;
   hashtag: Hashtag;
+  processorId?: string;
   metadata?: {
     lastEvaluatedTweetId?: string;
   };

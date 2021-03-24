@@ -1,6 +1,7 @@
 import './common/bootstrap';
 
 import * as HashtagVolumetryManager from 'managers/HashtagVolumetryManager';
+import * as ProcessorManager from 'managers/ProcessorManager';
 import * as QueueItemManager from 'managers/QueueItemManager';
 import * as logging from 'common/logging';
 
@@ -13,26 +14,41 @@ import packageJson from '../package.json';
 const { version } = packageJson;
 
 const WAIT_TIME = 1000; // 10s
+const PROCESSOR_NAME = process.env?.PROCESSOR_NAME || 'noname';
 const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
+const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}`;
+
+const processorMetadata = {
+  version,
+  twint: Twint.getVersion(),
+  TWINT_PATH: process.env.TWINT_PATH,
+  MONGODB_URI: process.env.MONGODB_URI,
+  DEBUG: process.env.DEBUG,
+};
 
 (async () => {
   logging.info(`Launching processor in version ${version}`);
-  logging.info(`Twint: ${Twint.getVersion()}`);
+  logging.info(`Twint: ${processorMetadata.twint}`);
 
   await dbConnect();
 
-  await QueueItemManager.resetOutdated(PROCESSOR_ID);
+  await ProcessorManager.update(PROCESSOR, { metadata: processorMetadata });
+
+  await QueueItemManager.resetOutdated(PROCESSOR);
 
   const poll = async () => {
     const { item, count } = await QueueItemManager.getPendingItems();
 
     if (!item) {
+      await ProcessorManager.update(PROCESSOR, { lastPollAt: new Date() });
       logging.debug(`No more items to go, waiting ${WAIT_TIME / 1000}s`);
       return setTimeout(() => process.nextTick(poll.bind(this)), WAIT_TIME);
     }
 
     logging.info(`------- ${count} item(s) to go -------`);
+
+    await ProcessorManager.update(PROCESSOR, { lastProcessedAt: new Date() });
 
     const isRequestForPreviousData = !!item.metadata?.lastEvaluatedTweetId;
     await QueueItemManager.startProcessing(item, PROCESSOR_ID, isRequestForPreviousData);
@@ -84,11 +100,11 @@ const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
           priority: item.priority + 1,
         });
         newHashtagData.status = HashtagStatuses.PROCESSING_PREVIOUS;
-        await QueueItemManager.stopProcessing(session)(item, PROCESSOR_ID, newHashtagData);
+        await QueueItemManager.stopProcessing(session)(item, PROCESSOR, newHashtagData);
       } else {
         // This is the last occurence of all times
         newHashtagData.firstOccurenceDate = lastEvaluatedTweet.created_at;
-        await QueueItemManager.stopProcessing(session)(item, PROCESSOR_ID, newHashtagData);
+        await QueueItemManager.stopProcessing(session)(item, PROCESSOR, newHashtagData);
       }
       // await session.commitTransaction();
       scraper.purge();
