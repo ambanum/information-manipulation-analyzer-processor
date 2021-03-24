@@ -11,7 +11,7 @@
     - update
 
 - debug:
-    msg: "Deploying '{{repository}}' for branch '{{branch}}' in folder '{{app}}'"
+    msg: "Deploying '{{repository}}#{{branch}}' in folder '{{app}}' and copying {{ env_file }}"
 
 - name: Build the image
   become: yes
