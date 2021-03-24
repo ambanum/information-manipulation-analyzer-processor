@@ -1,0 +1,6 @@
+---
+- name: Setup InformationManipulationAnalyzer-processor
+  hosts: all
+
+  roles:
+    - ima-processor/github-clone

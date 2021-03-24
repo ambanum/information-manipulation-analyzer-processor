@@ -1,0 +1,6 @@
+---
+- name: Setup InformationManipulationAnalyzer-processor infra and app
+  hosts: all
+
+- import_playbook: infra.yml
+- import_playbook: app.yml
