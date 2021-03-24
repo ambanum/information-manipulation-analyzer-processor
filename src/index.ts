@@ -29,7 +29,7 @@ const processorMetadata = {
 
 (async () => {
   logging.info(`Launching processor in version ${version}`);
-  logging.info(`Twint: ${processorMetadata.twint}`);
+  logging.info(processorMetadata);
 
   await dbConnect();
 
