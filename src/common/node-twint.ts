@@ -105,13 +105,14 @@ export default class Twint {
     this.hashtag = hashtag;
     this.dir = path.join(os.tmpdir(), 'information-manipulation-analyzer', hashtag);
     this.resumeFromTweetId = resumeFromTweetId;
+    this.nbTweetsToScrape = !resumeFromTweetId ? nbTweetsToScrapeFirstTime : nbTweetsToScrape;
     logging.info(
-      `Creating Twint instance for ${hashtag} in dir ${this.dir} with resumeFromTweetId ${this.resumeFromTweetId}`
+      `Using Twint to search ${this.nbTweetsToScrape} ${hashtag} from ${this.resumeFromTweetId}`
     );
+    logging.debug(`in dir ${this.dir}`);
     fs.mkdirSync(this.dir, { recursive: true });
     this.originalFilePath = `${this.dir}/original.json`;
     this.formattedFilePath = `${this.dir}/formatted.json`;
-    this.nbTweetsToScrape = !resumeFromTweetId ? nbTweetsToScrapeFirstTime : nbTweetsToScrape;
     this.downloadTweets();
   }
 
@@ -207,7 +208,7 @@ export default class Twint {
   };
 
   public purge = () => {
-    logging.info(`Remove ${this.dir}`);
+    logging.debug(`Remove ${this.dir}`);
     rimraf.sync(this.dir);
   };
 }
