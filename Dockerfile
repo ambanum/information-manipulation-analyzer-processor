@@ -54,7 +54,7 @@ RUN chown -R ambnum:ambnum /home/ambnum
 USER ambnum
 
 # and install twint for this user specifically as it does not work else
-RUN pip3 install --user --upgrade git+https://github.com/twintproject/twint.git@origin/master#egg=twint
+RUN pip3 install --user --upgrade "git+https://github.com/ambanum/twint.git@origin/master#egg=twint"
 RUN pip show twint | grep Version
 
 CMD [ "yarn", "start" ]
