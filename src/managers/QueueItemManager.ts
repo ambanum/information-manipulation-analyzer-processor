@@ -13,7 +13,7 @@ import HashtagModel from '../models/Hashtag';
 import QueueItemModel from '../models/QueueItem';
 
 export const resetOutdated = async (processorId: string) => {
-  logging.debug(`reset outdated items for processorId ${processorId}`);
+  logging.info(`reset outdated items for processorId ${processorId}`);
   try {
     return QueueItemModel.updateMany(
       { status: QueueItemStatuses.PROCESSING, processorId },
@@ -66,16 +66,26 @@ export const create = (session?: ClientSession) => async (
   }
 };
 
-export const getPendingItems = async () => {
+export const getPendingItems = async (processorId: string) => {
   logging.debug(`get PENDING items`);
   try {
     const query: FilterQuery<QueueItem> = { status: QueueItemStatuses.PENDING };
+    const count = await QueueItemModel.find(query).countDocuments();
+
+    const item: QueueItem = await QueueItemModel.findOneAndUpdate(
+      query,
+      {
+        $set: { status: QueueItemStatuses.PROCESSING, processorId },
+      },
+      {
+        setDefaultsOnInsert: true,
+        sort: { priority: 1, _id: -1 },
+      }
+    ).populate('hashtag');
 
     return {
-      item: (await QueueItemModel.findOne(query)
-        .sort({ priority: 1, _id: -1 })
-        .populate('hashtag')) as QueueItem,
-      count: await QueueItemModel.find(query).countDocuments(),
+      item,
+      count,
     };
   } catch (e) {
     console.error(e);
@@ -96,7 +106,6 @@ export const startProcessing = async (item: QueueItem, processorId: string, prev
       { _id: item.hashtag },
       { $set: { status: HashtagStatuses[previous ? 'PROCESSING_PREVIOUS' : 'PROCESSING'] } }
     );
-    // TODO update Hashtag too
   } catch (e) {
     console.error(e);
     throw new Error(

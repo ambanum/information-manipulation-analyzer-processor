@@ -13,7 +13,7 @@ import packageJson from '../package.json';
 
 const { version } = packageJson;
 
-const WAIT_TIME = 1000; // 10s
+const WAIT_TIME = 1 * 1000; // 1s
 const PROCESSOR_NAME = process.env?.PROCESSOR_NAME || 'noname';
 const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
@@ -38,7 +38,7 @@ const processorMetadata = {
   await QueueItemManager.resetOutdated(PROCESSOR);
 
   const poll = async () => {
-    const { item, count } = await QueueItemManager.getPendingItems();
+    const { item, count } = await QueueItemManager.getPendingItems(PROCESSOR);
 
     if (!item) {
       await ProcessorManager.update(PROCESSOR, { lastPollAt: new Date() });
@@ -48,10 +48,10 @@ const processorMetadata = {
 
     logging.info(`------- ${count} item(s) to go -------`);
 
-    await ProcessorManager.update(PROCESSOR, { lastProcessedAt: new Date() });
-
     const isRequestForPreviousData = !!item.metadata?.lastEvaluatedTweetId;
-    await QueueItemManager.startProcessing(item, PROCESSOR_ID, isRequestForPreviousData);
+    await QueueItemManager.startProcessing(item, PROCESSOR, isRequestForPreviousData);
+
+    await ProcessorManager.update(PROCESSOR, { lastProcessedAt: new Date() });
 
     const lastProcessedTweetId = item.hashtag?.metadata?.lastEvaluatedTweetId;
 
