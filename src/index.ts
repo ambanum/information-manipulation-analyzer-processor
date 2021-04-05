@@ -48,36 +48,36 @@ const processorMetadata = {
 
     logging.info(`------- ${count} item(s) to go -------`);
 
-    const isRequestForPreviousData = !!item.metadata?.lastEvaluatedTweetId;
+    const isRequestForPreviousData = !!item.metadata?.lastEvaluatedUntilTweetId;
     await QueueItemManager.startProcessing(item, PROCESSOR, isRequestForPreviousData);
 
     await ProcessorManager.update(PROCESSOR, { lastProcessedAt: new Date() });
 
-    const lastProcessedTweetId = item.hashtag?.metadata?.lastEvaluatedTweetId;
+    const lastProcessedUntilTweetId = item.hashtag?.metadata?.lastEvaluatedUntilTweetId;
 
     const scraper = new Twint(item.hashtag.name, {
-      resumeUntilTweetId: lastProcessedTweetId,
+      resumeUntilTweetId: lastProcessedUntilTweetId,
       nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
     });
     const volumetry = scraper.getVolumetry();
 
     const lastEvaluatedTweet = scraper.getLastEvaluatedTweet();
-    const lastEvaluatedTweetId = lastEvaluatedTweet?.id;
+    const lastEvaluatedUntilTweetId = lastEvaluatedTweet?.id;
     const lastEvaluatedTweetCreatedAt = lastEvaluatedTweet?.created_at;
 
     const newHashtagData: Partial<
       Parameters<ReturnType<typeof QueueItemManager.stopProcessing>>
     >[2] = {};
 
-    if (lastEvaluatedTweetId) {
-      // This to prevent overwriting the lastEvaluatedTweetId in case there is a problem
-      newHashtagData.metadata = { lastEvaluatedTweetId };
+    if (lastEvaluatedUntilTweetId) {
+      // This to prevent overwriting the lastEvaluatedUntilTweetId in case there is a problem
+      newHashtagData.metadata = { lastEvaluatedUntilTweetId };
     }
 
     if (lastEvaluatedTweetCreatedAt) {
       newHashtagData.oldestProcessedDate = lastEvaluatedTweetCreatedAt;
 
-      if (!lastProcessedTweetId) {
+      if (!lastProcessedUntilTweetId) {
         // this is the first time we make the request
         newHashtagData.newestProcessedDate = new Date();
       }
@@ -93,10 +93,10 @@ const processorMetadata = {
         Twint.platformId
       );
 
-      if (lastEvaluatedTweetId !== lastProcessedTweetId) {
+      if (lastEvaluatedUntilTweetId !== lastProcessedUntilTweetId) {
         // There might be some more data to retrieve
         await QueueItemManager.create(session)(item.hashtag._id, {
-          lastEvaluatedTweetId,
+          lastEvaluatedUntilTweetId,
           priority: item.priority + 1,
         });
         newHashtagData.status = HashtagStatuses.PROCESSING_PREVIOUS;

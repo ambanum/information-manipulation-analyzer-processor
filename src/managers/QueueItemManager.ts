@@ -35,9 +35,9 @@ export const PRIORITIES = {
 export const create = (session?: ClientSession) => async (
   hashtag: string,
   {
-    lastEvaluatedTweetId,
+    lastEvaluatedUntilTweetId,
     priority = PRIORITIES.NOW,
-  }: { lastEvaluatedTweetId?: string; priority?: number } = {}
+  }: { lastEvaluatedUntilTweetId?: string; priority?: number } = {}
 ) => {
   try {
     const queueItems = await QueueItemModel.create(
@@ -47,10 +47,10 @@ export const create = (session?: ClientSession) => async (
           action: QueueItemActionTypes.HASHTAG,
           status: QueueItemStatuses.PENDING,
           hashtag,
-          ...(lastEvaluatedTweetId
+          ...(lastEvaluatedUntilTweetId
             ? {
                 metadata: {
-                  lastEvaluatedTweetId,
+                  lastEvaluatedUntilTweetId,
                 },
               }
             : {}),

@@ -13,7 +13,7 @@ export interface Hashtag extends Document {
   name: string;
   status: HashtagStatuses;
   metadata?: {
-    lastEvaluatedTweetId?: string;
+    lastEvaluatedUntilTweetId?: string;
   };
   firstOccurenceDate?: string | Date;
   oldestProcessedDate?: string | Date;
@@ -34,7 +34,7 @@ const HashtagSchema = new Schema(
       enum: Object.values(HashtagStatuses),
     },
     metadata: {
-      lastEvaluatedTweetId: {
+      lastEvaluatedUntilTweetId: {
         type: String,
         index: true,
       },

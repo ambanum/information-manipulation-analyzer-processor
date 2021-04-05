@@ -21,7 +21,7 @@ export interface QueueItem extends Document {
   hashtag: Hashtag;
   processorId?: string;
   metadata?: {
-    lastEvaluatedTweetId?: string;
+    lastEvaluatedUntilTweetId?: string;
   };
 }
 
