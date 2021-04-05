@@ -56,7 +56,7 @@ const processorMetadata = {
     const lastProcessedTweetId = item.hashtag?.metadata?.lastEvaluatedTweetId;
 
     const scraper = new Twint(item.hashtag.name, {
-      resumeFromTweetId: lastProcessedTweetId,
+      resumeUntilTweetId: lastProcessedTweetId,
       nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
     });
     const volumetry = scraper.getVolumetry();

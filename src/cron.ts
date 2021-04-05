@@ -11,10 +11,12 @@ import packageJson from '../package.json';
 const { version } = packageJson;
 
 const WAIT_TIME = 10000; // 10s
+const PROCESSOR_NAME = process.env?.PROCESSOR_NAME || 'noname';
 const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
+const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}`;
 
 (async () => {
-  logging.info(`Launching processor in version ${version}`);
+  logging.info(`Launching cron in version ${version}`);
   logging.info(`Twint: ${Twint.getVersion()}`);
 
   await dbConnect();
@@ -35,7 +37,7 @@ const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
     //
     // const lastProcessedTweetId = item.hashtag?.metadata?.lastEvaluatedTweetId;
     //
-    // const scraper = new Twint(item.hashtag.name, { resumeFromTweetId: lastProcessedTweetId });
+    // const scraper = new Twint(item.hashtag.name, { resumeUntilTweetId: lastProcessedTweetId });
     // const volumetry = scraper.getVolumetry();
     //
     // await HashtagVolumetryManager.batchUpsert(item.hashtag._id, volumetry, Twint.platformId);

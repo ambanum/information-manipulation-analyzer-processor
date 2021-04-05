@@ -70,7 +70,7 @@ export interface Volumetry {
 }
 
 export interface TwintOptions {
-  resumeFromTweetId?: string;
+  resumeUntilTweetId?: string;
   nbTweetsToScrapeFirstTime?: number;
   nbTweetsToScrape?: number;
 }
@@ -86,7 +86,7 @@ export default class Twint {
   private formattedFilePath: string;
   private lastEvaluatedTweet?: Tweet;
   private nbTweetsToScrape?: number;
-  private resumeFromTweetId?: string;
+  private resumeUntilTweetId?: string;
   private dir: string;
   static platformId = 'twitter';
 
@@ -97,17 +97,17 @@ export default class Twint {
   constructor(
     hashtag: string,
     {
-      resumeFromTweetId,
+      resumeUntilTweetId,
       nbTweetsToScrapeFirstTime = NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT,
       nbTweetsToScrape = NB_TWEETS_TO_SCRAPE_DEFAULT,
     }: TwintOptions = {}
   ) {
     this.hashtag = hashtag;
     this.dir = path.join(os.tmpdir(), 'information-manipulation-analyzer', hashtag);
-    this.resumeFromTweetId = resumeFromTweetId;
-    this.nbTweetsToScrape = !resumeFromTweetId ? nbTweetsToScrapeFirstTime : nbTweetsToScrape;
+    this.resumeUntilTweetId = resumeUntilTweetId;
+    this.nbTweetsToScrape = !resumeUntilTweetId ? nbTweetsToScrapeFirstTime : nbTweetsToScrape;
     logging.info(
-      `Using Twint to search ${this.nbTweetsToScrape} ${hashtag} from ${this.resumeFromTweetId}`
+      `Using Twint to search ${this.nbTweetsToScrape} ${hashtag} from ${this.resumeUntilTweetId}`
     );
     logging.debug(`in dir ${this.dir}`);
     fs.mkdirSync(this.dir, { recursive: true });
@@ -124,11 +124,11 @@ export default class Twint {
     if (!fs.existsSync(this.formattedFilePath)) {
       logging.debug(
         `Download tweets to ${this.formattedFilePath} ${
-          this.resumeFromTweetId ? `and resume from ${this.resumeFromTweetId}` : ''
+          this.resumeUntilTweetId ? `and resume from ${this.resumeUntilTweetId}` : ''
         }`
       );
       const cmd = `${TWINT_PATH} -s "#${this.hashtag}${
-        this.resumeFromTweetId ? ` max_id:${this.resumeFromTweetId}` : ''
+        this.resumeUntilTweetId ? ` max_id:${this.resumeUntilTweetId}` : ''
       }" --limit ${this.nbTweetsToScrape} --json -o ${this.originalFilePath}`;
       execCmd(cmd);
       try {
@@ -145,7 +145,7 @@ export default class Twint {
     delete require.cache[require.resolve(this.formattedFilePath)];
     this.tweets = require(this.formattedFilePath);
 
-    if (this.resumeFromTweetId && this.tweets.length > 1) {
+    if (this.resumeUntilTweetId && this.tweets.length > 1) {
       // when resuming, first tweet is the same as last previous tweet so skip it
       this.tweets.pop();
     }
@@ -160,7 +160,7 @@ export default class Twint {
   public getVolumetry = () => {
     logging.info(
       `Formatting ${this.tweets.length} into volumetry for #${this.hashtag} ${
-        this.resumeFromTweetId ? `from tweetId: ${this.resumeFromTweetId}` : ''
+        this.resumeUntilTweetId ? `from tweetId: ${this.resumeUntilTweetId}` : ''
       }`
     );
 
