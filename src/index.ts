@@ -18,6 +18,7 @@ const PROCESSOR_NAME = process.env?.PROCESSOR_NAME || 'noname';
 const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
 const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}`;
+const NEXT_PROCESS_IN_FUTURE = 60 * 60 * 1000;
 
 const processorMetadata = {
   version,
@@ -48,44 +49,38 @@ const processorMetadata = {
 
     logging.info(`------- ${count} item(s) to go -------`);
 
-    const isRequestForPreviousData = !!item.metadata?.lastEvaluatedUntilTweetId;
-    await QueueItemManager.startProcessing(item, PROCESSOR, isRequestForPreviousData);
+    const { lastEvaluatedUntilTweetId, lastEvaluatedSinceTweetId } = item?.metadata || {};
+
+    const isRequestForPreviousData = !!lastEvaluatedUntilTweetId;
+    const isRequestForNewData = !!lastEvaluatedSinceTweetId;
+    const isFirstRequest = !isRequestForPreviousData && !isRequestForNewData;
+
+    await QueueItemManager.startProcessing(item, PROCESSOR, {
+      previous: isRequestForPreviousData,
+      next: isRequestForNewData,
+    });
 
     await ProcessorManager.update(PROCESSOR, { lastProcessedAt: new Date() });
 
-    const lastProcessedUntilTweetId = item.hashtag?.metadata?.lastEvaluatedUntilTweetId;
-
     const scraper = new Twint(item.hashtag.name, {
-      resumeUntilTweetId: lastProcessedUntilTweetId,
+      resumeUntilTweetId: lastEvaluatedUntilTweetId,
+      resumeSinceTweetId: lastEvaluatedSinceTweetId,
       nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
     });
+
     const volumetry = scraper.getVolumetry();
 
-    const lastEvaluatedTweet = scraper.getLastEvaluatedTweet();
-    const lastEvaluatedUntilTweetId = lastEvaluatedTweet?.id;
-    const lastEvaluatedTweetCreatedAt = lastEvaluatedTweet?.created_at;
-
-    const newHashtagData: Partial<
-      Parameters<ReturnType<typeof QueueItemManager.stopProcessing>>
-    >[2] = {};
-
-    if (lastEvaluatedUntilTweetId) {
-      // This to prevent overwriting the lastEvaluatedUntilTweetId in case there is a problem
-      newHashtagData.metadata = { lastEvaluatedUntilTweetId };
-    }
-
-    if (lastEvaluatedTweetCreatedAt) {
-      newHashtagData.oldestProcessedDate = lastEvaluatedTweetCreatedAt;
-
-      if (!lastProcessedUntilTweetId) {
-        // this is the first time we make the request
-        newHashtagData.newestProcessedDate = new Date();
-      }
-    }
     const session = undefined;
     // const session = await mongoose.startSession();
+
     try {
       // session.startTransaction();
+
+      // FIXME @martin should it still be used ?
+      // if (lastEvaluatedUntilTweetId) {
+      //   // This to prevent overwriting the lastEvaluatedUntilTweetId in case there is a problem
+      //   newHashtagData.metadata = { lastEvaluatedUntilTweetId };
+      // }
 
       await HashtagVolumetryManager.batchUpsert(session)(
         item.hashtag._id,
@@ -93,19 +88,56 @@ const processorMetadata = {
         Twint.platformId
       );
 
-      if (lastEvaluatedUntilTweetId !== lastProcessedUntilTweetId) {
-        // There might be some more data to retrieve
+      const newHashtagData: Partial<
+        Parameters<ReturnType<typeof QueueItemManager.stopProcessing>>
+      >[2] = {};
+
+      const { id: lastProcessedUntilTweetId, created_at: lastProcessedTweetCreatedAt } =
+        scraper.getLastProcessedTweet() || {};
+      const { id: firstProcessedUntilTweetId } = scraper.getFirstProcessedTweet() || {};
+
+      if (isFirstRequest || isRequestForPreviousData) {
+        if (lastProcessedTweetCreatedAt) {
+          newHashtagData.oldestProcessedDate = lastProcessedTweetCreatedAt;
+        }
+
+        if (lastEvaluatedUntilTweetId !== lastProcessedUntilTweetId && lastProcessedUntilTweetId) {
+          // There might be some more data to retrieve
+          await QueueItemManager.create(session)(item.hashtag._id, {
+            lastEvaluatedUntilTweetId: lastProcessedUntilTweetId,
+            priority: item.priority + 1,
+          });
+
+          newHashtagData.status = HashtagStatuses.PROCESSING_PREVIOUS;
+        } else {
+          // This is the last occurence of all times
+          newHashtagData.firstOccurenceDate = lastProcessedTweetCreatedAt;
+        }
+
+        if (isFirstRequest) {
+          const { id: firstProcessedUntilTweetId } = scraper.getFirstProcessedTweet() || {};
+          newHashtagData.newestProcessedDate = new Date();
+          await QueueItemManager.create(session)(item.hashtag._id, {
+            lastEvaluatedSinceTweetId: firstProcessedUntilTweetId,
+            priority: QueueItemManager.PRIORITIES.HIGH,
+            processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
+          });
+        }
+        await QueueItemManager.stopProcessing(session)(item, PROCESSOR, newHashtagData);
+      } else if (isRequestForNewData) {
+        // TODO What if more data than expected?
         await QueueItemManager.create(session)(item.hashtag._id, {
-          lastEvaluatedUntilTweetId,
-          priority: item.priority + 1,
+          lastEvaluatedSinceTweetId:
+            firstProcessedUntilTweetId || item?.metadata?.lastEvaluatedSinceTweetId,
+          priority: QueueItemManager.PRIORITIES.HIGH,
+          processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
         });
-        newHashtagData.status = HashtagStatuses.PROCESSING_PREVIOUS;
-        await QueueItemManager.stopProcessing(session)(item, PROCESSOR, newHashtagData);
-      } else {
-        // This is the last occurence of all times
-        newHashtagData.firstOccurenceDate = lastEvaluatedTweet.created_at;
-        await QueueItemManager.stopProcessing(session)(item, PROCESSOR, newHashtagData);
+
+        await QueueItemManager.stopProcessing(session)(item, PROCESSOR, {
+          newestProcessedDate: new Date(),
+        });
       }
+
       // await session.commitTransaction();
       scraper.purge();
       logging.info(`Item ${item._id} processing is done, waiting ${WAIT_TIME / 1000}s`);
