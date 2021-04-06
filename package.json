@@ -17,7 +17,8 @@
     "docker:build": "docker build -t $npm_package_name .",
     "docker:run": "(docker rm $npm_package_name || true) && docker run --rm  -e PROCESSOR_NAME=docker --name $npm_package_name -it $npm_package_name",
     "docker:run-2": "(docker rm information-manipulation-analyzer-processor-2 || true) && docker run --rm -e PROCESSOR_ID=2 -e PROCESSOR_NAME=docker -e TWINT_PATH=/home/ambnum/.local/bin/twint -e MONGODB_URI=mongodb://host.docker.internal:27777/information-manipulation-analyzer-production -e NB_TWEETS_TO_SCRAPE=10000 --name information-manipulation-analyzer-processor-2 -it information-manipulation-analyzer-processor",
-    "docker:ssh": "docker exec -it $npm_package_name /bin/bash"
+    "docker:ssh": "docker exec -it $npm_package_name /bin/bash",
+    "test": "jest"
   },
   "dependencies": {
     "debug": "^4.3.1",
@@ -28,10 +29,13 @@
     "typescript": "^4.2.3"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.22",
     "@types/mongoose": "^5.10.4",
     "@types/node": "^14.14.32",
+    "jest": "^26.6.3",
     "prettier": "^2.2.1",
     "prettier-config-ambanum": "^1.0.1",
+    "ts-jest": "^26.5.4",
     "ts-node-dev": "^1.1.6",
     "tsconfig-paths": "^3.9.0"
   }
