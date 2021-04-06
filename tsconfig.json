@@ -11,7 +11,8 @@
     "esModuleInterop": true,
     "lib": ["esnext", "dom"],
     "baseUrl": "./src",
-    "outDir": "./build"
+    "outDir": "./build",
+    "types": ["node", "jest"]
   },
   "exclude": ["node_modules", "*.md"],
   "include": ["src/**/*", "tools/**/*"]
