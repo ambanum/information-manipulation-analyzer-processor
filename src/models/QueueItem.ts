@@ -20,8 +20,10 @@ export interface QueueItem extends Document {
   status: QueueItemStatuses;
   hashtag: Hashtag;
   processorId?: string;
+  processingDate?: Date;
   metadata?: {
-    lastEvaluatedTweetId?: string;
+    lastEvaluatedUntilTweetId?: string;
+    lastEvaluatedSinceTweetId?: string;
   };
 }
 
@@ -43,6 +45,12 @@ const QueueItemSchema = new Schema(
       required: true,
       index: true,
       enum: Object.values(QueueItemStatuses),
+    },
+    processingDate: {
+      type: Date,
+      required: true,
+      index: true,
+      default: new Date(),
     },
     processorId: {
       type: String,

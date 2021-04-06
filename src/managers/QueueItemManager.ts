@@ -35,9 +35,16 @@ export const PRIORITIES = {
 export const create = (session?: ClientSession) => async (
   hashtag: string,
   {
-    lastEvaluatedTweetId,
+    lastEvaluatedUntilTweetId,
+    lastEvaluatedSinceTweetId,
     priority = PRIORITIES.NOW,
-  }: { lastEvaluatedTweetId?: string; priority?: number } = {}
+    processingDate,
+  }: {
+    lastEvaluatedUntilTweetId?: string;
+    lastEvaluatedSinceTweetId?: string;
+    priority?: number;
+    processingDate?: Date;
+  } = {}
 ) => {
   try {
     const queueItems = await QueueItemModel.create(
@@ -46,11 +53,19 @@ export const create = (session?: ClientSession) => async (
           priority,
           action: QueueItemActionTypes.HASHTAG,
           status: QueueItemStatuses.PENDING,
+          processingDate,
           hashtag,
-          ...(lastEvaluatedTweetId
+          ...(lastEvaluatedUntilTweetId
             ? {
                 metadata: {
-                  lastEvaluatedTweetId,
+                  lastEvaluatedUntilTweetId,
+                },
+              }
+            : {}),
+          ...(lastEvaluatedSinceTweetId
+            ? {
+                metadata: {
+                  lastEvaluatedSinceTweetId,
                 },
               }
             : {}),
@@ -69,7 +84,10 @@ export const create = (session?: ClientSession) => async (
 export const getPendingItems = async (processorId: string) => {
   logging.debug(`get PENDING items`);
   try {
-    const query: FilterQuery<QueueItem> = { status: QueueItemStatuses.PENDING };
+    const query: FilterQuery<QueueItem> = {
+      status: QueueItemStatuses.PENDING,
+      processingDate: { $lte: new Date() },
+    };
     const count = await QueueItemModel.find(query).countDocuments();
 
     const item: QueueItem = await QueueItemModel.findOneAndUpdate(
@@ -93,7 +111,11 @@ export const getPendingItems = async (processorId: string) => {
   }
 };
 
-export const startProcessing = async (item: QueueItem, processorId: string, previous?: boolean) => {
+export const startProcessing = async (
+  item: QueueItem,
+  processorId: string,
+  { previous, next }: { previous?: boolean; next?: boolean }
+) => {
   logging.debug(
     `Start processing for queueItem ${item._id} (pr:${item.priority}) and processor ${processorId}`
   );
@@ -104,7 +126,18 @@ export const startProcessing = async (item: QueueItem, processorId: string, prev
     );
     await HashtagModel.updateOne(
       { _id: item.hashtag },
-      { $set: { status: HashtagStatuses[previous ? 'PROCESSING_PREVIOUS' : 'PROCESSING'] } }
+      {
+        $set: {
+          status:
+            HashtagStatuses[
+              previous
+                ? HashtagStatuses.PROCESSING_PREVIOUS
+                : next
+                ? HashtagStatuses.PROCESSING_NEW
+                : HashtagStatuses.PROCESSING
+            ],
+        },
+      }
     );
   } catch (e) {
     console.error(e);
