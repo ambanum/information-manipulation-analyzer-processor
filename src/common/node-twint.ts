@@ -175,7 +175,16 @@ export default class Twint {
 
       const associatedHashtags = acc[date]?.associatedHashtags || {};
       tweet.hashtags.forEach((hashtag) => {
-        if (hashtag === this.hashtag) {
+        if (
+          this.hashtag ===
+          hashtag
+            // replace all accents with plain
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            // kepp only allowed characters in hashtag
+            .replace(/[^a-zA-Z\d_]/gim, '')
+            .toLowerCase()
+        ) {
           return;
         }
         associatedHashtags[hashtag] = (associatedHashtags[hashtag] || 0) + 1;
