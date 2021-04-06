@@ -5,6 +5,7 @@ export enum HashtagStatuses {
   PROCESSING = 'PROCESSING',
   DONE_FIRST_FETCH = 'DONE_FIRST_FETCH',
   PROCESSING_PREVIOUS = 'PROCESSING_PREVIOUS',
+  PROCESSING_NEW = 'PROCESSING_NEW',
   DONE = 'DONE',
   DONE_ERROR = 'DONE_ERROR',
 }
@@ -13,7 +14,7 @@ export interface Hashtag extends Document {
   name: string;
   status: HashtagStatuses;
   metadata?: {
-    lastEvaluatedTweetId?: string;
+    lastEvaluatedUntilTweetId?: string;
   };
   firstOccurenceDate?: string | Date;
   oldestProcessedDate?: string | Date;
@@ -34,7 +35,7 @@ const HashtagSchema = new Schema(
       enum: Object.values(HashtagStatuses),
     },
     metadata: {
-      lastEvaluatedTweetId: {
+      lastEvaluatedUntilTweetId: {
         type: String,
         index: true,
       },

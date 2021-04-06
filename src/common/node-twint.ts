@@ -70,7 +70,8 @@ export interface Volumetry {
 }
 
 export interface TwintOptions {
-  resumeFromTweetId?: string;
+  resumeSinceTweetId?: string;
+  resumeUntilTweetId?: string;
   nbTweetsToScrapeFirstTime?: number;
   nbTweetsToScrape?: number;
 }
@@ -84,9 +85,10 @@ export default class Twint {
   private hashtag: string;
   private originalFilePath: string;
   private formattedFilePath: string;
-  private lastEvaluatedTweet?: Tweet;
+  private firstProcessedTweet?: Tweet;
+  private lastProcessedTweet?: Tweet;
   private nbTweetsToScrape?: number;
-  private resumeFromTweetId?: string;
+  private filter?: string;
   private dir: string;
   static platformId = 'twitter';
 
@@ -97,18 +99,24 @@ export default class Twint {
   constructor(
     hashtag: string,
     {
-      resumeFromTweetId,
+      resumeUntilTweetId,
+      resumeSinceTweetId,
       nbTweetsToScrapeFirstTime = NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT,
       nbTweetsToScrape = NB_TWEETS_TO_SCRAPE_DEFAULT,
     }: TwintOptions = {}
   ) {
     this.hashtag = hashtag;
     this.dir = path.join(os.tmpdir(), 'information-manipulation-analyzer', hashtag);
-    this.resumeFromTweetId = resumeFromTweetId;
-    this.nbTweetsToScrape = !resumeFromTweetId ? nbTweetsToScrapeFirstTime : nbTweetsToScrape;
-    logging.info(
-      `Using Twint to search ${this.nbTweetsToScrape} ${hashtag} from ${this.resumeFromTweetId}`
-    );
+
+    this.filter = resumeUntilTweetId
+      ? `max_id:${resumeUntilTweetId}`
+      : resumeSinceTweetId
+      ? `since_id:${resumeSinceTweetId}`
+      : '';
+
+    this.nbTweetsToScrape = !this.filter ? nbTweetsToScrapeFirstTime : nbTweetsToScrape;
+
+    logging.info(`Using Twint to search ${this.nbTweetsToScrape} ${hashtag} ${this.filter}`);
     logging.debug(`in dir ${this.dir}`);
     fs.mkdirSync(this.dir, { recursive: true });
     this.originalFilePath = `${this.dir}/original.json`;
@@ -122,13 +130,9 @@ export default class Twint {
     }
 
     if (!fs.existsSync(this.formattedFilePath)) {
-      logging.debug(
-        `Download tweets to ${this.formattedFilePath} ${
-          this.resumeFromTweetId ? `and resume from ${this.resumeFromTweetId}` : ''
-        }`
-      );
+      logging.debug(`Download tweets to ${this.formattedFilePath} ${this.filter}`);
       const cmd = `${TWINT_PATH} -s "#${this.hashtag}${
-        this.resumeFromTweetId ? ` max_id:${this.resumeFromTweetId}` : ''
+        this.filter ? ` ${this.filter}` : ''
       }" --limit ${this.nbTweetsToScrape} --json -o ${this.originalFilePath}`;
       execCmd(cmd);
       try {
@@ -145,9 +149,12 @@ export default class Twint {
     delete require.cache[require.resolve(this.formattedFilePath)];
     this.tweets = require(this.formattedFilePath);
 
-    if (this.resumeFromTweetId && this.tweets.length > 1) {
-      // when resuming, first tweet is the same as last previous tweet so skip it
-      this.tweets.pop();
+    this.firstProcessedTweet = this.tweets[0];
+    this.lastProcessedTweet = this.tweets[this.tweets.length - 1];
+
+    if (this.filter) {
+      // remove last beginning tweet to not count it twice
+      this.tweets = this.tweets.filter((t) => t.id !== this.filter.split(':')[1]);
     }
 
     // DEBUG
@@ -159,9 +166,7 @@ export default class Twint {
 
   public getVolumetry = () => {
     logging.info(
-      `Formatting ${this.tweets.length} into volumetry for #${this.hashtag} ${
-        this.resumeFromTweetId ? `from tweetId: ${this.resumeFromTweetId}` : ''
-      }`
+      `Formatting ${this.tweets.length} into volumetry for #${this.hashtag} ${this.filter}`
     );
 
     // FIXME PERF REDUCE
@@ -170,7 +175,16 @@ export default class Twint {
 
       const associatedHashtags = acc[date]?.associatedHashtags || {};
       tweet.hashtags.forEach((hashtag) => {
-        if (hashtag === this.hashtag) {
+        if (
+          this.hashtag ===
+          hashtag
+            // replace all accents with plain
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            // kepp only allowed characters in hashtag
+            .replace(/[^a-zA-Z\d_]/gim, '')
+            .toLowerCase()
+        ) {
           return;
         }
         associatedHashtags[hashtag] = (associatedHashtags[hashtag] || 0) + 1;
@@ -195,16 +209,22 @@ export default class Twint {
         },
       };
     }, {});
-    this.lastEvaluatedTweet = this.tweets[this.tweets.length - 1];
 
     return volumetry;
   };
 
-  public getLastEvaluatedTweet = () => {
-    logging.info(
-      `Get Last Evaluated tweet for ${this.hashtag} ${this.lastEvaluatedTweet?.created_at}`
+  public getLastProcessedTweet = () => {
+    logging.debug(
+      `Get Last Processed tweet for ${this.hashtag} ${this.lastProcessedTweet?.created_at}`
     );
-    return this.lastEvaluatedTweet;
+    return this.lastProcessedTweet;
+  };
+
+  public getFirstProcessedTweet = () => {
+    logging.debug(
+      `Get First Processed tweet for ${this.hashtag} ${this.firstProcessedTweet?.created_at}`
+    );
+    return this.firstProcessedTweet;
   };
 
   public purge = () => {
