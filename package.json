@@ -8,7 +8,7 @@
   "prettier": "prettier-config-ambanum",
   "scripts": {
     "build": "tsc",
-    "start": "NODE_PATH=build DEBUG=ima:* node build/index.js",
+    "start": "NODE_PATH=build node build/index.js",
     "dev": "node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts",
     "deploy:vagrant:preproduction": "ansible-playbook ops/site.yml -i ops/inventories/dev.yml -e \"ENV=preproduction\" -e \"ENV_FILE=.env.vagrant.preproduction\" -e \"BRANCH=main\"",
     "deploy:vagrant:production": "ansible-playbook ops/site.yml -i ops/inventories/dev.yml -e \"ENV=production\" -e \"ENV_FILE=.env.vagrant.production\" -e \"BRANCH=main\"",
