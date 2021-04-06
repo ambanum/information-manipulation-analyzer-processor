@@ -5,6 +5,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import rimraf from 'rimraf';
+import { sanitizeHashtag } from 'utils/sanitizer';
 
 interface ReplyTo {
   screen_name: string;
@@ -175,19 +176,11 @@ export default class Twint {
 
       const associatedHashtags = acc[date]?.associatedHashtags || {};
       tweet.hashtags.forEach((hashtag) => {
-        if (
-          this.hashtag ===
-          hashtag
-            // replace all accents with plain
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            // kepp only allowed characters in hashtag
-            .replace(/[^a-zA-Z\d_]/gim, '')
-            .toLowerCase()
-        ) {
+        const sanitizedHashtag = sanitizeHashtag(hashtag);
+        if (this.hashtag === sanitizedHashtag) {
           return;
         }
-        associatedHashtags[hashtag] = (associatedHashtags[hashtag] || 0) + 1;
+        associatedHashtags[sanitizedHashtag] = (associatedHashtags[sanitizedHashtag] || 0) + 1;
       });
 
       return {
