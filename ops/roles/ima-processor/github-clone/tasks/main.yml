@@ -34,11 +34,13 @@
     restart: yes
     env:
       PROCESSOR_ID: '1'
-# - name: Start the second container
-#   become: yes
-#   community.general.docker_container:
-#     name: '{{ app }}'
-#     image: '{{ app }}'
-#     restart: yes
-#     env:
-#       PROCESSOR_ID: '2'
+- name: Start the second container
+  become: yes
+  community.general.docker_container:
+    name: '{{ app }}-2'
+    image: '{{ app }}'
+    restart: yes
+    env:
+      PROCESSOR_ID: '2'
+      NB_TWEETS_TO_SCRAPE: '10000'
+      MIN_PRIORITY: '2'

@@ -81,12 +81,16 @@ export const create = (session?: ClientSession) => async (
   }
 };
 
-export const getPendingItems = async (processorId: string) => {
+export const getPendingItems = async (
+  processorId: string,
+  minPriority: number = PRIORITIES.NOW
+) => {
   logging.debug(`get PENDING items`);
   try {
     const query: FilterQuery<QueueItem> = {
       status: QueueItemStatuses.PENDING,
       processingDate: { $lte: new Date() },
+      priority: { $gte: minPriority },
     };
     const count = await QueueItemModel.find(query).countDocuments();
 

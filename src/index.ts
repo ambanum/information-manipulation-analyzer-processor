@@ -17,6 +17,7 @@ const WAIT_TIME = 1 * 1000; // 1s
 const PROCESSOR_NAME = process.env?.PROCESSOR_NAME || 'noname';
 const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
+const MIN_PRIORITY = parseInt(process.env?.MIN_PRIORITY || '0', 10);
 const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}`;
 const NEXT_PROCESS_IN_FUTURE = 60 * 60 * 1000;
 
@@ -39,7 +40,7 @@ const processorMetadata = {
   await QueueItemManager.resetOutdated(PROCESSOR);
 
   const poll = async () => {
-    const { item, count } = await QueueItemManager.getPendingItems(PROCESSOR);
+    const { item, count } = await QueueItemManager.getPendingItems(PROCESSOR, MIN_PRIORITY);
 
     if (!item) {
       await ProcessorManager.update(PROCESSOR, { lastPollAt: new Date() });
