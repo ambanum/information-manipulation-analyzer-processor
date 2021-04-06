@@ -205,14 +205,14 @@ export default class Twint {
   };
 
   public getLastProcessedTweet = () => {
-    logging.info(
+    logging.debug(
       `Get Last Processed tweet for ${this.hashtag} ${this.lastProcessedTweet?.created_at}`
     );
     return this.lastProcessedTweet;
   };
 
   public getFirstProcessedTweet = () => {
-    logging.info(
+    logging.debug(
       `Get First Processed tweet for ${this.hashtag} ${this.firstProcessedTweet?.created_at}`
     );
     return this.firstProcessedTweet;

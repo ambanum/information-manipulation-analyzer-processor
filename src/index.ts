@@ -115,7 +115,6 @@ const processorMetadata = {
         }
 
         if (isFirstRequest) {
-          const { id: firstProcessedUntilTweetId } = scraper.getFirstProcessedTweet() || {};
           newHashtagData.newestProcessedDate = new Date();
           await QueueItemManager.create(session)(item.hashtag._id, {
             lastEvaluatedSinceTweetId: firstProcessedUntilTweetId,
@@ -125,13 +124,19 @@ const processorMetadata = {
         }
         await QueueItemManager.stopProcessing(session)(item, PROCESSOR, newHashtagData);
       } else if (isRequestForNewData) {
-        // TODO What if more data than expected?
-        await QueueItemManager.create(session)(item.hashtag._id, {
-          lastEvaluatedSinceTweetId:
-            firstProcessedUntilTweetId || item?.metadata?.lastEvaluatedSinceTweetId,
-          priority: QueueItemManager.PRIORITIES.HIGH,
-          processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
-        });
+        if (!firstProcessedUntilTweetId) {
+          // No New data has been found
+          await QueueItemManager.create(session)(item.hashtag._id, {
+            lastEvaluatedSinceTweetId: item?.metadata?.lastEvaluatedSinceTweetId,
+            priority: QueueItemManager.PRIORITIES.HIGH,
+            processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
+          });
+        } else {
+          await QueueItemManager.create(session)(item.hashtag._id, {
+            lastEvaluatedSinceTweetId: firstProcessedUntilTweetId,
+            priority: QueueItemManager.PRIORITIES.HIGH,
+          });
+        }
 
         await QueueItemManager.stopProcessing(session)(item, PROCESSOR, {
           newestProcessedDate: new Date(),
