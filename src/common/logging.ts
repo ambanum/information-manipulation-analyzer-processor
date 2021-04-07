@@ -12,4 +12,4 @@ export const debug = (...args: any[]) => debugLib('ima:debug')(`[${getTime()}]`,
 // spaces are intended to align correclty logs in console
 export const info = (...args: any[]) => debugLib('ima: info')(`[${getTime()}]`, ...args);
 export const warn = (...args: any[]) => debugLib('ima: warn')(`[${getTime()}]`, ...args);
-export const error = (...args: any[]) => debugLib('ima: error')(`[${getTime()}]`, ...args);
+export const error = (...args: any[]) => debugLib('ima:error')(`[${getTime()}]`, ...args);

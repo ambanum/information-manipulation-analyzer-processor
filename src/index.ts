@@ -150,6 +150,11 @@ const processorMetadata = {
     } catch (e) {
       // await session.abortTransaction();
       logging.error(e);
+
+      // we have found some volumetry
+      await QueueItemManager.stopProcessingWithError(session)(item, PROCESSOR, {
+        error: e.toString(),
+      });
       logging.error(
         `Item ${item._id} could not be processed correctly retrying in ${WAIT_TIME / 1000}s`
       );
