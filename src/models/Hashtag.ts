@@ -19,6 +19,7 @@ export interface Hashtag extends Document {
   firstOccurenceDate?: string | Date;
   oldestProcessedDate?: string | Date;
   newestProcessedDate?: string | Date;
+  error?: string;
 }
 
 const HashtagSchema = new Schema(
@@ -50,6 +51,10 @@ const HashtagSchema = new Schema(
     },
     newestProcessedDate: {
       type: Date,
+      index: true,
+    },
+    error: {
+      type: String,
       index: true,
     },
   },

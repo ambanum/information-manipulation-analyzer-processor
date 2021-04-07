@@ -176,3 +176,34 @@ export const stopProcessing = (session: ClientSession) => async (
     );
   }
 };
+
+export const stopProcessingWithError = (session: ClientSession) => async (
+  item: QueueItem,
+  processorId: string,
+  hashtagData: Partial<Hashtag>
+) => {
+  logging.debug(
+    `Stop processing with error for queueItem ${item._id} and processor ${processorId}`
+  );
+  try {
+    await QueueItemModel.updateOne(
+      { _id: item._id },
+      { $set: { status: QueueItemStatuses.DONE_ERROR, processorId } },
+      session ? { session } : {}
+    );
+
+    await HashtagModel.updateOne(
+      { _id: item.hashtag },
+      { $set: { status: HashtagStatuses.DONE_ERROR, ...hashtagData } },
+      session ? { session } : {}
+    );
+
+    // TODO
+    // Send email
+  } catch (e) {
+    console.error(e);
+    throw new Error(
+      `Could not stop processing with error for queueItem ${item._id} and processor ${processorId}`
+    );
+  }
+};
