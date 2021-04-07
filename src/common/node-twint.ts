@@ -147,6 +147,7 @@ export default class Twint {
         execCmd(`echo "[]" > ${this.formattedFilePath}`);
       }
     }
+
     delete require.cache[require.resolve(this.formattedFilePath)];
     this.tweets = require(this.formattedFilePath);
 
@@ -180,6 +181,11 @@ export default class Twint {
         if (this.hashtag === sanitizedHashtag) {
           return;
         }
+        if (!sanitizedHashtag) {
+          logging.error(`Hashtag "${hashtag}" has been sanitized to an empty string -> skipping`);
+          return;
+        }
+
         associatedHashtags[sanitizedHashtag] = (associatedHashtags[sanitizedHashtag] || 0) + 1;
       });
 
