@@ -58,25 +58,26 @@ const processorMetadata = {
     const isRequestForNewData = !!lastEvaluatedSinceTweetId;
     const isFirstRequest = !isRequestForPreviousData && !isRequestForNewData;
 
-    await QueueItemManager.startProcessing(item, PROCESSOR, {
-      previous: isRequestForPreviousData,
-      next: isRequestForNewData,
-    });
-
-    await ProcessorManager.update(PROCESSOR, { lastProcessedAt: new Date() });
-
-    const scraper = new Scraper(item.hashtag.name, {
-      resumeUntilTweetId: lastEvaluatedUntilTweetId,
-      resumeSinceTweetId: lastEvaluatedSinceTweetId,
-      nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
-    });
-
-    const volumetry = scraper.getVolumetry();
-
     const session = undefined;
-    // const session = await mongoose.startSession();
 
     try {
+      await QueueItemManager.startProcessing(item, PROCESSOR, {
+        previous: isRequestForPreviousData,
+        next: isRequestForNewData,
+      });
+
+      await ProcessorManager.update(PROCESSOR, { lastProcessedAt: new Date() });
+
+      const scraper = new Scraper(item.hashtag.name, {
+        resumeUntilTweetId: lastEvaluatedUntilTweetId,
+        resumeSinceTweetId: lastEvaluatedSinceTweetId,
+        nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
+      });
+
+      const volumetry = scraper.getVolumetry();
+
+      // const session = await mongoose.startSession();
+
       // session.startTransaction();
 
       // FIXME @martin should it still be used ?
