@@ -11,8 +11,6 @@ const ProcessorSchema = new Schema(
   {
     _id: {
       type: String,
-      required: true,
-      index: true,
     },
     metadata: {
       type: Schema.Types.Mixed,
