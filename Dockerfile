@@ -1,4 +1,4 @@
-FROM python:3.7-slim-stretch
+FROM python:3.9-slim
 
 ARG ENV_FILE=".env.production"
 
@@ -53,8 +53,9 @@ RUN chown -R ambnum:ambnum /home/ambnum
 # Finally use right user
 USER ambnum
 
-# and install twint for this user specifically as it does not work else
-RUN pip3 install --user --upgrade "git+https://github.com/ambanum/twint.git@origin/master#egg=twint"
-RUN pip show twint | grep Version
+# and install scraper for this user specifically as it does not work else
+# RUN pip3 install --user --upgrade "git+https://github.com/ambanum/twint.git@origin/master#egg=twint"
+RUN pip3 install git+https://github.com/JustAnotherArchivist/snscrape.git
+
 
 CMD [ "yarn", "start" ]

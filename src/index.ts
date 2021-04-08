@@ -6,7 +6,7 @@ import * as QueueItemManager from 'managers/QueueItemManager';
 import * as logging from 'common/logging';
 
 import { HashtagStatuses } from 'interfaces';
-import Twint from 'common/node-twint';
+import Scraper from 'common/node-snscrape';
 import dbConnect from 'common/db';
 // @ts-ignore
 import packageJson from '../package.json';
@@ -21,10 +21,12 @@ const MIN_PRIORITY = parseInt(process.env?.MIN_PRIORITY || '0', 10);
 const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}`;
 const NEXT_PROCESS_IN_FUTURE = 60 * 60 * 1000;
 
+const scraperName = 'snscrape';
+
 const processorMetadata = {
   version,
-  twint: Twint.getVersion(),
-  TWINT_PATH: process.env.TWINT_PATH,
+  [scraperName]: Scraper.getVersion(),
+  scraperPath: Scraper.getPath(),
   MONGODB_URI: process.env.MONGODB_URI,
   DEBUG: process.env.DEBUG,
 };
@@ -63,7 +65,7 @@ const processorMetadata = {
 
     await ProcessorManager.update(PROCESSOR, { lastProcessedAt: new Date() });
 
-    const scraper = new Twint(item.hashtag.name, {
+    const scraper = new Scraper(item.hashtag.name, {
       resumeUntilTweetId: lastEvaluatedUntilTweetId,
       resumeSinceTweetId: lastEvaluatedSinceTweetId,
       nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
@@ -86,14 +88,14 @@ const processorMetadata = {
       await HashtagVolumetryManager.batchUpsert(session)(
         item.hashtag._id,
         volumetry,
-        Twint.platformId
+        Scraper.platformId
       );
 
       const newHashtagData: Partial<
         Parameters<ReturnType<typeof QueueItemManager.stopProcessing>>
       >[2] = {};
 
-      const { id: lastProcessedUntilTweetId, created_at: lastProcessedTweetCreatedAt } =
+      const { id: lastProcessedUntilTweetId, date: lastProcessedTweetCreatedAt } =
         scraper.getLastProcessedTweet() || {};
       const { id: firstProcessedUntilTweetId } = scraper.getFirstProcessedTweet() || {};
 
