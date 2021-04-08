@@ -10,6 +10,7 @@ const hashtagTests = [
   ],
   ['Set.constructor`alert\x28document.domain\x29', 'setconstructoralertdocumentdomain'],
   ['ok', 'ok'],
+  ['ok129', 'ok129'],
   ['Super', 'super'],
   ['فرنسا_الإرهابية', 'فرنسا_الإرهابية'],
   ['Xoроший', 'xoроший'],

@@ -11,5 +11,5 @@ export const sanitizeHashtag = (hashtag: string) =>
     .replace(/[œ]/g, 'oe')
     .replace(/[ùúûü]/g, 'u')
     .replace(/[ýÿ]/g, 'y')
-    .replace(/[^\p{L}_]/gimu, '')
+    .replace(/[^\p{L}\d_]/gimu, '')
     .toLowerCase();
