@@ -1,3 +1,6 @@
+- name: Include vars
+  include_vars: '{{ENV}}.yml'
+
 - name: Clone Repo
   git:
     repo: '{{ repository }}'
@@ -9,9 +12,6 @@
   tags:
     - setup
     - update
-
-- debug:
-    msg: "Deploying '{{repository}}#{{branch}}' in folder '{{app}}' and copying {{ env_file }}"
 
 - name: Build the image
   become: yes
@@ -32,15 +32,30 @@
     name: '{{ app }}-1'
     image: '{{ app }}'
     restart: yes
+    state: started
+    restart_policy: unless-stopped
     env:
       PROCESSOR_ID: '1'
+
 - name: Start the second container
   become: yes
+  when: nb_processors == '2'
   community.general.docker_container:
     name: '{{ app }}-2'
     image: '{{ app }}'
     restart: yes
+    state: started
+    restart_policy: unless-stopped
     env:
       PROCESSOR_ID: '2'
-      NB_TWEETS_TO_SCRAPE: '10000'
+      NB_TWEETS_TO_SCRAPE: '6000'
       MIN_PRIORITY: '2'
+
+- name: Prune containers and images
+  become: yes
+  community.docker.docker_prune:
+    containers: yes
+    images: yes
+    networks: false
+    volumes: false
+    builder_cache: false

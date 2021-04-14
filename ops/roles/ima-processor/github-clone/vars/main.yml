@@ -1,4 +1,0 @@
-app: 'ima-{{ ENV }}'
-repository: 'https://github.com/ambanum/information-manipulation-analyzer-processor.git'
-branch: "{{ BRANCH if BRANCH is defined else 'main' if ENV == 'production' else 'develop' }}"
-env_file: "{{ ENV_FILE if ENV_FILE is defined else '.env.production' if ENV == 'production' else '.env.preproduction' }}"

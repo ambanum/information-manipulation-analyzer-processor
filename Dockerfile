@@ -37,7 +37,7 @@ RUN yarn
 # install microservice code
 COPY . /home/ambnum/
 RUN rm .env.*
-COPY ./$ENV_FILE /home/ambnum/.env.production
+COPY ./docker/$ENV_FILE /home/ambnum/.env.production
 RUN yarn build
 RUN chmod 777 /home/ambnum/build && \
   chown ambnum:ambnum /home/ambnum/build
