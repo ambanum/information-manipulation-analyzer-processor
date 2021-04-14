@@ -1,0 +1,5 @@
+app: 'ima-processor-tflmi-preproduction'
+repository: 'https://github.com/ambanum/information-manipulation-analyzer-processor.git'
+branch: 'develop'
+env_file: '.env.tflmi.preproduction'
+nb_processors: '1'
