@@ -60,6 +60,26 @@ const processorMetadata = {
 
     const session = undefined;
 
+    const initScraper = (retries = 3): Scraper => {
+      try {
+        const scraper = new Scraper(item.hashtag.name, {
+          resumeUntilTweetId: lastEvaluatedUntilTweetId,
+          resumeSinceTweetId: lastEvaluatedSinceTweetId,
+          nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
+        });
+        return scraper;
+      } catch (e) {
+        if (retries - 1 >= 0) {
+          logging.warn(
+            `Scraper for ${item._id} (#${item.hashtag.name}) could not be processed correctly retrying again ${retries} times`
+          );
+          return initScraper(retries - 1);
+        }
+
+        throw e;
+      }
+    };
+
     try {
       await QueueItemManager.startProcessing(item, PROCESSOR, {
         previous: isRequestForPreviousData,
@@ -68,11 +88,7 @@ const processorMetadata = {
 
       await ProcessorManager.update(PROCESSOR, { lastProcessedAt: new Date() });
 
-      const scraper = new Scraper(item.hashtag.name, {
-        resumeUntilTweetId: lastEvaluatedUntilTweetId,
-        resumeSinceTweetId: lastEvaluatedSinceTweetId,
-        nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
-      });
+      let scraper = initScraper();
 
       const volumetry = scraper.getVolumetry();
 
