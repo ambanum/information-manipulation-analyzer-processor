@@ -1,6 +1,18 @@
 - name: Include vars
   include_vars: '{{ENV}}.yml'
 
+- name: Find out ops's path
+  shell: pwd
+  register: ops_path_output
+  connection: local
+
+- name: get version from package
+  shell: cat "{{ops_path_output.stdout}}/../package.json"
+  register: package_json
+  connection: local
+
+- set_fact: package="{{ package_json.stdout | from_json }}"
+
 - name: Clone Repo
   git:
     repo: '{{ repository }}'
@@ -23,14 +35,14 @@
       args:
         ENV_FILE: '{{ env_file }}'
       path: '/home/{{ ansible_user }}/{{ app }}'
-    name: '{{ app }}'
+    name: '{{ app }}:{{ package.version }}'
     force_source: yes
 
 - name: Start the container
   become: yes
   community.general.docker_container:
     name: '{{ app }}-1'
-    image: '{{ app }}'
+    image: '{{ app }}:{{ package.version }}'
     restart: yes
     state: started
     restart_policy: unless-stopped
@@ -42,7 +54,7 @@
   when: nb_processors == '2'
   community.general.docker_container:
     name: '{{ app }}-2'
-    image: '{{ app }}'
+    image: '{{ app }}:{{ package.version }}'
     restart: yes
     state: started
     restart_policy: unless-stopped
