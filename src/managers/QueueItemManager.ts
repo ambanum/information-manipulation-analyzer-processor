@@ -16,7 +16,12 @@ export const resetOutdated = async (processorId: string) => {
   logging.info(`reset outdated items for processorId ${processorId}`);
   try {
     return QueueItemModel.updateMany(
-      { status: QueueItemStatuses.PROCESSING, processorId },
+      {
+        $or: [
+          { status: QueueItemStatuses.PROCESSING, processorId },
+          { status: QueueItemStatuses.DONE_ERROR, processorId, error: /Command failed/gim },
+        ],
+      },
       { $set: { status: QueueItemStatuses.PENDING, processorId: null } }
     );
   } catch (e) {
@@ -188,7 +193,7 @@ export const stopProcessingWithError = (session: ClientSession) => async (
   try {
     await QueueItemModel.updateOne(
       { _id: item._id },
-      { $set: { status: QueueItemStatuses.DONE_ERROR, processorId } },
+      { $set: { status: QueueItemStatuses.DONE_ERROR, processorId, error: hashtagData.error } },
       session ? { session } : {}
     );
 
