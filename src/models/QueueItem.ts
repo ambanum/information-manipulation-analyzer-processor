@@ -64,6 +64,10 @@ const QueueItemSchema = new Schema(
         'field used to pass some filters or additional data to process data more finely (startDate, endDate, etc...)',
     },
     hashtag: { type: Schema.Types.ObjectId, ref: 'Hashtag' },
+    error: {
+      type: String,
+      index: true,
+    },
   },
   {
     strict: 'throw',
