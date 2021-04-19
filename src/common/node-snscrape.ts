@@ -201,7 +201,13 @@ export default class Snscrape {
             return;
           }
 
-          associatedHashtags[sanitizedHashtag] = (associatedHashtags[sanitizedHashtag] || 0) + 1;
+          const existingNumber =
+            associatedHashtags[sanitizedHashtag] &&
+            typeof associatedHashtags[sanitizedHashtag] === 'number'
+              ? associatedHashtags[sanitizedHashtag]
+              : 0;
+
+          associatedHashtags[sanitizedHashtag] = existingNumber + 1;
         });
 
       return {

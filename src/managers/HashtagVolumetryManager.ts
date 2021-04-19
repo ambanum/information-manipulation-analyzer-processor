@@ -1,3 +1,5 @@
+import * as logging from 'common/logging';
+
 import { ClientSession } from 'mongoose';
 import HashtagVolumetryModel from 'models/HashtagVolumetry';
 
@@ -20,58 +22,58 @@ export const batchUpsert = (session: ClientSession) => async (
 ) => {
   const dates = Object.keys(volumetry);
 
-  await HashtagVolumetryModel.bulkWrite(
-    dates.map((date) => {
-      const {
-        tweets,
-        retweets,
-        likes,
-        quotes,
-        languages,
-        usernames,
-        associatedHashtags,
-      } = volumetry[date];
+  const bulkQueries = dates.map((date) => {
+    const { tweets, retweets, likes, quotes, languages, usernames, associatedHashtags } = volumetry[
+      date
+    ];
 
-      const languagesInc = Object.keys(languages).reduce(
-        (acc: any, language) => ({
-          ...acc,
-          [`languages.${language}`]: languages[language],
-        }),
-        {}
-      );
-      const usernamesInc = Object.keys(usernames).reduce(
-        (acc: any, username) => ({
-          ...acc,
-          [`usernames.${username}`]: usernames[username],
-        }),
-        {}
-      );
-      const associatedHashtagsInc = Object.keys(associatedHashtags).reduce(
-        (acc: any, associatedHashtag) => ({
-          ...acc,
-          [`associatedHashtags.${associatedHashtag}`]: associatedHashtags[associatedHashtag],
-        }),
-        {}
-      );
+    const languagesInc = Object.keys(languages).reduce(
+      (acc: any, language) => ({
+        ...acc,
+        [`languages.${language}`]: languages[language],
+      }),
+      {}
+    );
+    const usernamesInc = Object.keys(usernames).reduce(
+      (acc: any, username) => ({
+        ...acc,
+        [`usernames.${username}`]: usernames[username],
+      }),
+      {}
+    );
+    const associatedHashtagsInc = Object.keys(associatedHashtags).reduce(
+      (acc: any, associatedHashtag) => ({
+        ...acc,
+        [`associatedHashtags.${associatedHashtag}`]: associatedHashtags[associatedHashtag],
+      }),
+      {}
+    );
 
-      return {
-        updateOne: {
-          filter: { date, platformId, hashtag },
-          update: {
-            $inc: {
-              nbTweets: tweets,
-              nbRetweets: retweets,
-              nbLikes: likes,
-              nbQuotes: quotes,
-              ...languagesInc,
-              ...usernamesInc,
-              ...associatedHashtagsInc,
-            },
+    return {
+      updateOne: {
+        filter: { date, platformId, hashtag },
+        update: {
+          $inc: {
+            nbTweets: tweets,
+            nbRetweets: retweets,
+            nbLikes: likes,
+            nbQuotes: quotes,
+            ...languagesInc,
+            ...usernamesInc,
+            ...associatedHashtagsInc,
           },
-          upsert: true,
-          session,
         },
-      };
-    })
-  );
+        upsert: true,
+        session,
+      },
+    };
+  });
+
+  try {
+    await HashtagVolumetryModel.bulkWrite(bulkQueries);
+  } catch (e) {
+    logging.error(e);
+    logging.error(JSON.stringify(volumetry, null, 2));
+    throw e;
+  }
 };

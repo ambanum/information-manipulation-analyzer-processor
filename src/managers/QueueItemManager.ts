@@ -171,7 +171,7 @@ export const stopProcessing = (session: ClientSession) => async (
 
     await HashtagModel.updateOne(
       { _id: item.hashtag },
-      { $set: { status: HashtagStatuses.DONE, ...hashtagData } },
+      { $set: { status: HashtagStatuses.DONE, error: null, ...hashtagData } },
       session ? { session } : {}
     );
   } catch (e) {
