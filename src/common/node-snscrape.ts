@@ -183,7 +183,11 @@ export default class Snscrape {
 
     // FIXME PERF REDUCE
     const volumetry = this.tweets.reduce((acc: Volumetry, tweet) => {
-      const date = `${tweet.date.substr(0, 13)}:00:00`;
+      const date = `${tweet.date.replace(/\d\d:\d\d\+(.*)/, '00:00+$1')}`;
+      if (!tweet.date.endsWith('+00:00')) {
+        logging.error('tweet has a date that does not end with +00:00');
+        logging.error(tweet);
+      }
 
       const associatedHashtags = acc[date]?.associatedHashtags || {};
       tweet.content
@@ -229,7 +233,6 @@ export default class Snscrape {
         },
       };
     }, {});
-
     return volumetry;
   };
 
