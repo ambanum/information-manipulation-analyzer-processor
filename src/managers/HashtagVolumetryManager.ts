@@ -48,7 +48,6 @@ export const batchUpsert = (session: ClientSession) => async (
       }),
       {}
     );
-
     return {
       updateOne: {
         filter: { date, platformId, hashtag },
