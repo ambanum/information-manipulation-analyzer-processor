@@ -5,7 +5,8 @@ import * as ProcessorManager from 'managers/ProcessorManager';
 import * as QueueItemManager from 'managers/QueueItemManager';
 import * as logging from 'common/logging';
 
-import { HashtagStatuses } from 'interfaces';
+import { HashtagStatuses, QueueItemStatuses } from 'interfaces';
+
 import Scraper from 'common/node-snscrape';
 import dbConnect from 'common/db';
 // @ts-ignore
@@ -135,32 +136,50 @@ const processorMetadata = {
         }
 
         if (isFirstRequest) {
-          newHashtagData.newestProcessedDate = new Date();
           await QueueItemManager.create(session)(item.hashtag._id, {
             lastEvaluatedSinceTweetId: firstProcessedUntilTweetId,
             priority: QueueItemManager.PRIORITIES.HIGH,
             processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
           });
         }
-        await QueueItemManager.stopProcessing(session)(item, PROCESSOR, newHashtagData);
+        await QueueItemManager.stopProcessing(session)(
+          item,
+          { processorId: PROCESSOR },
+          newHashtagData
+        );
       } else if (isRequestForNewData) {
         if (!firstProcessedUntilTweetId) {
-          // No New data has been found
-          await QueueItemManager.create(session)(item.hashtag._id, {
-            lastEvaluatedSinceTweetId: item?.metadata?.lastEvaluatedSinceTweetId,
-            priority: QueueItemManager.PRIORITIES.HIGH,
-            processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
-          });
+          // reuse same queueitem to prevent having too many of them
+          // and just change the date
+          await QueueItemManager.stopProcessing(session)(
+            item,
+            {
+              status: QueueItemStatuses.PENDING,
+              processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
+              metadata: {
+                ...(item.metadata || {}),
+                numberTimesCrawled: (item.metadata.numberTimesCrawled || 0) + 1,
+              },
+              processorId: PROCESSOR,
+            },
+            {
+              newestProcessedDate: new Date(),
+            }
+          );
         } else {
           await QueueItemManager.create(session)(item.hashtag._id, {
             lastEvaluatedSinceTweetId: firstProcessedUntilTweetId,
             priority: QueueItemManager.PRIORITIES.HIGH,
+            processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
           });
+          await QueueItemManager.stopProcessing(session)(
+            item,
+            { processorId: PROCESSOR },
+            {
+              newestProcessedDate: new Date(),
+            }
+          );
         }
-
-        await QueueItemManager.stopProcessing(session)(item, PROCESSOR, {
-          newestProcessedDate: new Date(),
-        });
       }
 
       // await session.commitTransaction();

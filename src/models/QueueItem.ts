@@ -24,6 +24,7 @@ export interface QueueItem extends Document {
   metadata?: {
     lastEvaluatedUntilTweetId?: string;
     lastEvaluatedSinceTweetId?: string;
+    numberTimesCrawled?: number;
   };
 }
 

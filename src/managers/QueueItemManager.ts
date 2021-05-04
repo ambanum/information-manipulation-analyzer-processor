@@ -158,14 +158,19 @@ export const startProcessing = async (
 
 export const stopProcessing = (session: ClientSession) => async (
   item: QueueItem,
-  processorId: string,
+  itemData: Partial<QueueItem>,
   hashtagData: Partial<Hashtag>
 ) => {
-  logging.debug(`Stop processing for queueItem ${item._id} and processor ${processorId}`);
+  logging.debug(`Stop processing for queueItem ${item._id} and processor ${itemData.processorId}`);
   try {
     await QueueItemModel.updateOne(
       { _id: item._id },
-      { $set: { status: QueueItemStatuses.DONE, processorId } },
+      {
+        $set: {
+          status: QueueItemStatuses.DONE,
+          ...itemData,
+        },
+      },
       session ? { session } : {}
     );
 
@@ -177,7 +182,7 @@ export const stopProcessing = (session: ClientSession) => async (
   } catch (e) {
     console.error(e);
     throw new Error(
-      `Could not stop processing for queueItem ${item._id} and processor ${processorId}`
+      `Could not stop processing for queueItem ${item._id} and processor ${itemData.processorId}`
     );
   }
 };
