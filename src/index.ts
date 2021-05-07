@@ -7,6 +7,7 @@ import * as logging from 'common/logging';
 
 import { HashtagStatuses, QueueItemStatuses } from 'interfaces';
 
+import { Client } from '@elastic/elasticsearch';
 import Scraper from 'common/node-snscrape';
 import dbConnect from 'common/db';
 // @ts-ignore
@@ -14,12 +15,15 @@ import packageJson from '../package.json';
 
 const { version } = packageJson;
 
+const client = new Client({ node: 'http://localhost:9200' });
+
 const WAIT_TIME = 1 * 1000; // 1s
 const PROCESSOR_NAME = process.env?.PROCESSOR_NAME || 'noname';
 const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
 const MIN_PRIORITY = parseInt(process.env?.MIN_PRIORITY || '0', 10);
 const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}`;
+// const NEXT_PROCESS_IN_FUTURE = 1 * 45 * 1000;
 const NEXT_PROCESS_IN_FUTURE = 60 * 60 * 1000;
 
 const scraperName = 'snscrape';
@@ -90,6 +94,15 @@ const processorMetadata = {
       await ProcessorManager.update(PROCESSOR, { lastProcessedAt: new Date() });
 
       let scraper = initScraper();
+
+      // ELASTIC SEARCH
+      const tweets = scraper.getTweets();
+      if (tweets.length > 0) {
+        const body = tweets.flatMap((doc) => [{ index: { _index: 'tweets', _id: doc.id } }, doc]);
+
+        const { body: bulkResponse } = await client.bulk({ refresh: true, body });
+      }
+      // ELASTIC SEARCH
 
       const volumetry = scraper.getVolumetry();
 
