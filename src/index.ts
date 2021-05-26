@@ -15,7 +15,7 @@ import packageJson from '../package.json';
 
 const { version } = packageJson;
 
-const client = new Client({ node: 'http://localhost:9200' });
+/* const client = new Client({ node: 'http://localhost:9200' }); */
 
 const WAIT_TIME = 1 * 1000; // 1s
 const PROCESSOR_NAME = process.env?.PROCESSOR_NAME || 'noname';
@@ -96,12 +96,12 @@ const processorMetadata = {
       let scraper = initScraper();
 
       // ELASTIC SEARCH
-      const tweets = scraper.getTweets();
+      /* const tweets = scraper.getTweets();
       if (tweets.length > 0) {
         const body = tweets.flatMap((doc) => [{ index: { _index: 'tweets', _id: doc.id } }, doc]);
 
         const { body: bulkResponse } = await client.bulk({ refresh: true, body });
-      }
+      } */
       // ELASTIC SEARCH
 
       const volumetry = scraper.getVolumetry();

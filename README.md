@@ -15,14 +15,36 @@ Plan is to migrate Snscrape to the french sovereign bot whenever it will be read
 
 **IMPORTANT** main branch is `main` but all PRs must be against `develop`, except for immediate patches
 
+Install mongoDB and lauch instance
+
+```
+brew tap mongodb/brew
+brew install mongodb-community@4.4
+mongo --version
+brew services start mongodb-community
+```
+
+then install [mongoDB Compass](https://www.mongodb.com/products/compass) and create a local database
+
 Create a `.env.local` file at the root of the project (You can copy it from `.env.local.example`)
+and don't forget to change the name of your local database on the `MONGODB_URI` value
 
 ```
 NODE_PATH="src"
-MONGODB_URI="mongodb://localhost:27017/information-manipulation-analyzer-preproduction?&compressors=zlib&retryWrites=true&w=majority"
+MONGODB_URI="mongodb://localhost:27017/database-name?&compressors=zlib&retryWrites=true&w=majority"
 ```
 
-launch a mongoDb Instance or connect to a distant one
+Install snscrape
+
+```
+pip3 install git+https://github.com/JustAnotherArchivist/snscrape.git
+```
+
+Install jq
+
+```
+brew install jq
+```
 
 Then launch
 
