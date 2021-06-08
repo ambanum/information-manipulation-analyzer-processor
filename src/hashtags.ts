@@ -106,6 +106,8 @@ export default class HashtagPoller {
         Scraper.platformId
       );
 
+      const users = scraper.getUsers();
+
       const newHashtagData: Partial<
         Parameters<Properties<QueueItemManager>['stopProcessingHashtag']>[2]
       > = {};

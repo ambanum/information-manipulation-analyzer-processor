@@ -255,6 +255,17 @@ export default class Snscrape {
     return this.firstProcessedTweet;
   };
 
+  public getUsers = (): User[] => {
+    this.logger.debug(`Get users from tweets for ${this.hashtag}`);
+    const uniqueUsers = {};
+    this.tweets.forEach((tweet) => (uniqueUsers[tweet.user.id] = tweet.user));
+    return Object.values(uniqueUsers);
+  };
+
+  public getTweets = () => {
+    return this.tweets;
+  };
+
   public purge = () => {
     this.logger.debug(`Remove ${this.dir}`);
     rimraf.sync(this.dir);
