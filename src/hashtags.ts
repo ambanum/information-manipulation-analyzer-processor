@@ -63,6 +63,7 @@ export default class HashtagPoller {
           resumeUntilTweetId: lastEvaluatedUntilTweetId,
           resumeSinceTweetId: lastEvaluatedSinceTweetId,
           nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
+          logger: this.logger,
         });
         return scraper;
       } catch (e) {
