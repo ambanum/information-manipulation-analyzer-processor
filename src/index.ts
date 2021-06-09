@@ -1,11 +1,7 @@
 import './common/bootstrap';
 
-import * as HashtagVolumetryManager from 'managers/HashtagVolumetryManager';
 import * as ProcessorManager from 'managers/ProcessorManager';
-import * as QueueItemManager from 'managers/QueueItemManager';
 import * as logging from 'common/logging';
-
-import { HashtagStatuses, QueueItemStatuses } from 'interfaces';
 
 import HashtagPoller from 'hashtags';
 import Scraper from 'common/node-snscrape';
@@ -19,11 +15,9 @@ const PROCESSOR_NAME = process.env?.PROCESSOR_NAME || 'noname';
 const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
 const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}`;
 
-const scraperName = 'snscrape';
-
 const processorMetadata = {
   version,
-  [scraperName]: Scraper.getVersion(),
+  snscrape: Scraper.getVersion(),
   scraperPath: Scraper.getPath(),
   MONGODB_URI: process.env.MONGODB_URI,
   DEBUG: process.env.DEBUG,
