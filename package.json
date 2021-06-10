@@ -45,7 +45,6 @@
     "prettier": "^2.2.1",
     "prettier-config-ambanum": "^1.0.1",
     "ts-jest": "^26.5.4",
-    "ts-node-dev": "^1.1.6",
     "tsconfig-paths": "^3.9.0"
   }
 }
