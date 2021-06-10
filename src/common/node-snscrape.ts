@@ -270,6 +270,27 @@ export default class Snscrape {
     return this.tweets;
   };
 
+  static getUser = (
+    username: string
+  ): { status: 'active' | 'notfound' | 'suspended'; user?: User } => {
+    const cmd = `${SNSCRAPE_PATH} --with-entity --max-results 0 --jsonl twitter-user ${username}`;
+
+    try {
+      const user = execCmd(cmd);
+
+      if (!user) {
+        return {
+          status: 'notfound',
+        };
+      }
+      return { status: 'active', user: JSON.parse(user) };
+    } catch (e) {
+      return {
+        status: 'suspended',
+      };
+    }
+  };
+
   public purge = () => {
     this.logger.debug(`Remove ${this.dir}`);
     rimraf.sync(this.dir);
