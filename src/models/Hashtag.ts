@@ -57,6 +57,10 @@ const HashtagSchema = new Schema(
       type: String,
       index: true,
     },
+    scrapeVersion: {
+      type: Number,
+      index: true,
+    },
   },
   {
     strict: 'throw',
