@@ -5,6 +5,7 @@ import * as logging from 'common/logging';
 
 import HashtagPoller from './hashtags';
 import Scraper from 'common/node-snscrape';
+import Server from './server';
 import dbConnect from 'common/db';
 // @ts-ignore
 import packageJson from '../package.json';
@@ -38,7 +39,8 @@ const processorMetadata = {
   await ProcessorManager.update(PROCESSOR, { metadata: processorMetadata });
 
   if (service === 'server') {
-    console.log('TODO: implement server');
+    const apiServer = new Server({ processorId: PROCESSOR, logger: logging });
+    apiServer.init();
   } else {
     const hashtagPoller = new HashtagPoller({ processorId: PROCESSOR });
     await hashtagPoller.init();
