@@ -16,22 +16,25 @@ interface QueueItemManagerProps {
   processorId: string;
   logger: typeof logging;
   session?: ClientSession;
+  scrapeVersion: number;
 }
 
 export default class QueueItemManager {
   private processorId: QueueItemManagerProps['processorId'];
   private logger?: QueueItemManagerProps['logger'];
   private session?: QueueItemManagerProps['session'];
+  private scrapeVersion?: QueueItemManagerProps['scrapeVersion'];
   public static PRIORITIES = {
     NOW: 0,
     URGENT: 1,
     HIGH: 2,
     MEDIUM: 3,
   };
-  constructor({ processorId, logger, session }: QueueItemManagerProps) {
+  constructor({ processorId, logger, session, scrapeVersion }: QueueItemManagerProps) {
     this.logger = logger || logging;
     this.processorId = processorId;
     this.session = session;
+    this.scrapeVersion = scrapeVersion;
   }
 
   resetOutdated = async (action: QueueItemActionTypes) => {
@@ -155,6 +158,7 @@ export default class QueueItemManager {
         { _id: item.hashtag },
         {
           $set: {
+            scrapeVersion: this.scrapeVersion,
             status:
               HashtagStatuses[
                 previous
