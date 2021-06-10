@@ -188,6 +188,10 @@ export default class Snscrape {
 
     // FIXME PERF REDUCE
     const volumetry = this.tweets.reduce((acc: Volumetry, tweet) => {
+      if (!tweet) {
+        return acc;
+      }
+
       const date = `${tweet.date.replace(/\d\d:\d\d\+(.*)/, '00:00+$1')}`;
       if (!tweet.date.endsWith('+00:00')) {
         this.logger.error('tweet has a date that does not end with +00:00');
