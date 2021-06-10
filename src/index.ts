@@ -39,8 +39,12 @@ const processorMetadata = {
   await ProcessorManager.update(PROCESSOR, { metadata: processorMetadata });
 
   if (service === 'server') {
-    const apiServer = new Server({ processorId: PROCESSOR, logger: logging });
-    apiServer.init();
+    if (process.env.API !== 'false') {
+      const apiServer = new Server({ processorId: PROCESSOR, logger: logging });
+      apiServer.init();
+    } else {
+      logging.info('No API started');
+    }
   } else {
     const hashtagPoller = new HashtagPoller({ processorId: PROCESSOR });
     await hashtagPoller.init();
