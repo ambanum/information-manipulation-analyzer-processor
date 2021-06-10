@@ -11,9 +11,16 @@ import packageJson from '../package.json';
 
 const { version } = packageJson;
 
+const service: 'hashtag' | 'server' | string = process.argv[2];
+
+if (!['hashtag', 'server'].includes(service)) {
+  console.error("You need to specify a service 'hashtag' | 'server'");
+  process.exit();
+}
+
 const PROCESSOR_NAME = process.env?.PROCESSOR_NAME || 'noname';
 const PROCESSOR_ID = process.env?.PROCESSOR_ID || '1';
-const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}`;
+const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}_${service}`;
 
 const processorMetadata = {
   version,
@@ -22,14 +29,6 @@ const processorMetadata = {
   MONGODB_URI: process.env.MONGODB_URI,
   DEBUG: process.env.DEBUG,
 };
-
-const service: 'hashtag' | 'server' | string = process.argv[2];
-
-if (!['hashtag', 'server'].includes(service)) {
-  console.error("You need to specify a service 'hashtag' | 'server'");
-  process.exit();
-}
-
 (async () => {
   logging.info(`Launching processor in version ${version}`);
   logging.info(processorMetadata);
