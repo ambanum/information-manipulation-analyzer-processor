@@ -14,8 +14,15 @@ const MIN_PRIORITY = parseInt(process.env?.MIN_PRIORITY || '0', 10);
 const NEXT_PROCESS_IN_FUTURE = 60 * 60 * 1000;
 const logPrefix = '[hashtag]';
 
+// version to change when data retrieved is changed
+// this way we can display in the frontend a note saying that
+// in order to have the full features, you need to relaunch the process
+// v2: added users storing
+const SCRAPE_VERSION = 2;
+
 // Because I could not find other way in tyepscript to get functions of a class
 type Properties<T> = { [K in keyof T]: T[K] };
+
 export default class HashtagPoller {
   private processorId: string;
   private logger: typeof logging;
@@ -32,6 +39,7 @@ export default class HashtagPoller {
     this.queueItemManager = new QueueItemManager({
       logger: this.logger,
       processorId,
+      scrapeVersion: SCRAPE_VERSION,
     });
   }
 
