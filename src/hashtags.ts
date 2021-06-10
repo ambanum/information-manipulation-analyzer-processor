@@ -1,5 +1,6 @@
 import * as HashtagVolumetryManager from 'managers/HashtagVolumetryManager';
 import * as ProcessorManager from 'managers/ProcessorManager';
+import * as UserManager from 'managers/UserManager';
 import * as logging from 'common/logging';
 
 import { HashtagStatuses, QueueItemActionTypes, QueueItemStatuses } from 'interfaces';
@@ -88,7 +89,17 @@ export default class HashtagPoller {
 
       let scraper = initScraper();
 
+      // save volumetry
       const volumetry = scraper.getVolumetry();
+      await HashtagVolumetryManager.batchUpsert(session)(
+        item.hashtag._id,
+        volumetry,
+        Scraper.platformId
+      );
+
+      // save users
+      const users = scraper.getUsers();
+      await UserManager.batchUpsert(session)(users, Scraper.platformId);
 
       // const session = await mongoose.startSession();
 
@@ -99,14 +110,6 @@ export default class HashtagPoller {
       //   // This to prevent overwriting the lastEvaluatedUntilTweetId in case there is a problem
       //   newHashtagData.metadata = { lastEvaluatedUntilTweetId };
       // }
-
-      await HashtagVolumetryManager.batchUpsert(session)(
-        item.hashtag._id,
-        volumetry,
-        Scraper.platformId
-      );
-
-      const users = scraper.getUsers();
 
       const newHashtagData: Partial<
         Parameters<Properties<QueueItemManager>['stopProcessingHashtag']>[2]
