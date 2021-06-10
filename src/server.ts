@@ -2,6 +2,8 @@ import * as logging from 'common/logging';
 
 import express, { Express } from 'express';
 
+import Scraper from 'common/node-snscrape';
+
 interface ServerProps {
   processorId: string;
   logger: typeof logging;
@@ -19,9 +21,12 @@ export default class Server {
   }
 
   init = () => {
-    this.app.get('/', (req, res) => {
-      this.logger.info(`${this.processorId} deozidez`);
-      res.send('Well done!');
+    this.app.get('/scrape/twitter/user/:username', (req, res) => {
+      try {
+        res.json(Scraper.getUser(req.params.username));
+      } catch (error) {
+        res.json({ status: 'ko', message: 'User not found', error: error.toString() });
+      }
     });
 
     this.app.listen(process.env.SERVER_PORT, () => {
