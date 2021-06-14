@@ -48,6 +48,8 @@
     restart_policy: unless-stopped
     env:
       PROCESSOR_ID: '1'
+    ports:
+      - '{{ app_port }}:4000'
 
 - name: Start the second container
   become: yes

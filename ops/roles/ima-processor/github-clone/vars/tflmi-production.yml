@@ -1,5 +1,6 @@
 app: 'ima-processor-tflmi-production'
 repository: 'https://github.com/ambanum/information-manipulation-analyzer-processor.git'
 branch: 'main'
+app_port: '7024'
 env_file: '.env.tflmi.production'
 nb_processors: '2'
