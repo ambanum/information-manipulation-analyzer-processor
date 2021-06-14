@@ -182,22 +182,6 @@ export default class Snscrape {
     return this.tweets;
   };
 
-  public getTweets = () => {
-    return this.tweets.map((tweet, i) => {
-      if (!tweet.content) {
-        console.log(''); // eslint-disable-line
-        console.log('╔════START══tweet══════════════════════════════════════════════════'); // eslint-disable-line
-        console.log(i, tweet); // eslint-disable-line
-        console.log('╚════END════tweet══════════════════════════════════════════════════'); // eslint-disable-line
-      }
-
-      const hashtags = (tweet.content || '')
-        .split(/[\s\n\r]/gim)
-        .filter((v) => v.startsWith('#') && v !== '#');
-      return { ...tweet, hashtags };
-    });
-  };
-
   public getVolumetry = () => {
     this.logger.info(
       `Formatting ${this.tweets.length} into volumetry for #${this.hashtag} ${this.filter}`
