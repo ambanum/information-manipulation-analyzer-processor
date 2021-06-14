@@ -55,6 +55,7 @@ interface Tweet {
   mentionedUsers: User[];
   coordinates?: string;
   place?: string;
+  hashtags?: string[];
 }
 
 export interface Volumetry {
@@ -179,6 +180,22 @@ export default class Snscrape {
     //   console.log(i, tweet?.id, tweet?.date, tweet?.time, tweet?.username, tweet?.tweet);
     // });
     return this.tweets;
+  };
+
+  public getTweets = () => {
+    return this.tweets.map((tweet, i) => {
+      if (!tweet.content) {
+        console.log(''); // eslint-disable-line
+        console.log('╔════START══tweet══════════════════════════════════════════════════'); // eslint-disable-line
+        console.log(i, tweet); // eslint-disable-line
+        console.log('╚════END════tweet══════════════════════════════════════════════════'); // eslint-disable-line
+      }
+
+      const hashtags = (tweet.content || '')
+        .split(/[\s\n\r]/gim)
+        .filter((v) => v.startsWith('#') && v !== '#');
+      return { ...tweet, hashtags };
+    });
   };
 
   public getVolumetry = () => {
