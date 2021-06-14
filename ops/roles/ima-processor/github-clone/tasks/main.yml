@@ -48,6 +48,7 @@
     restart_policy: unless-stopped
     env:
       PROCESSOR_ID: '1'
+      SERVER_PORT: '4000'
     ports:
       - '{{ app_port }}:4000'
 
