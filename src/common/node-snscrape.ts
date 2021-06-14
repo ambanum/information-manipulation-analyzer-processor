@@ -80,6 +80,7 @@ export interface SnscrapeOptions {
   resumeUntilTweetId?: string;
   nbTweetsToScrapeFirstTime?: number;
   nbTweetsToScrape?: number;
+  logger?: typeof logging;
 }
 
 const NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT = 1000;
@@ -96,6 +97,7 @@ export default class Snscrape {
   private nbTweetsToScrape?: number;
   private filter?: string;
   private dir: string;
+  private logger: typeof logging;
   static platformId = 'twitter';
 
   static getVersion = () => {
@@ -112,8 +114,10 @@ export default class Snscrape {
       resumeSinceTweetId,
       nbTweetsToScrapeFirstTime = NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT,
       nbTweetsToScrape = NB_TWEETS_TO_SCRAPE_DEFAULT,
+      logger,
     }: SnscrapeOptions = {}
   ) {
+    this.logger = logger || logging;
     this.hashtag = hashtag;
     this.dir = path.join(os.tmpdir(), 'information-manipulation-analyzer', hashtag);
 
@@ -125,8 +129,8 @@ export default class Snscrape {
 
     this.nbTweetsToScrape = !this.filter ? nbTweetsToScrapeFirstTime : nbTweetsToScrape;
 
-    logging.info(`Using Snscrape to search ${this.nbTweetsToScrape} ${hashtag} ${this.filter}`);
-    logging.debug(`in dir ${this.dir}`);
+    this.logger.info(`Using Snscrape to search ${this.nbTweetsToScrape} ${hashtag} ${this.filter}`);
+    this.logger.debug(`in dir ${this.dir}`);
     fs.mkdirSync(this.dir, { recursive: true });
     this.originalFilePath = `${this.dir}/original.json`;
     this.formattedFilePath = `${this.dir}/formatted.json`;
@@ -139,7 +143,7 @@ export default class Snscrape {
     }
 
     if (!fs.existsSync(this.formattedFilePath)) {
-      logging.debug(`Download tweets to ${this.formattedFilePath} ${this.filter}`);
+      this.logger.debug(`Download tweets to ${this.formattedFilePath} ${this.filter}`);
       const cmd = `${SNSCRAPE_PATH} --with-entity --max-results ${
         this.nbTweetsToScrape
       } --jsonl twitter-hashtag "${this.hashtag}${this.filter ? ` ${this.filter}` : ''}" > ${
@@ -152,7 +156,8 @@ export default class Snscrape {
         // json format given by twint is weird and we need jq to recreate them
         execCmd(`(jq -s . < ${this.originalFilePath}) > ${this.formattedFilePath}`);
       } catch (e) {
-        logging.error(e); // eslint-disable-line
+        this.logger.error(e); // eslint-disable-line
+
         // TODO either end with error or fallback gently, depending on the error
         execCmd(`echo "[]" > ${this.formattedFilePath}`);
       }
@@ -177,16 +182,20 @@ export default class Snscrape {
   };
 
   public getVolumetry = () => {
-    logging.info(
+    this.logger.info(
       `Formatting ${this.tweets.length} into volumetry for #${this.hashtag} ${this.filter}`
     );
 
     // FIXME PERF REDUCE
     const volumetry = this.tweets.reduce((acc: Volumetry, tweet) => {
+      if (!tweet) {
+        return acc;
+      }
+
       const date = `${tweet.date.replace(/\d\d:\d\d\+(.*)/, '00:00+$1')}`;
       if (!tweet.date.endsWith('+00:00')) {
-        logging.error('tweet has a date that does not end with +00:00');
-        logging.error(tweet);
+        this.logger.error('tweet has a date that does not end with +00:00');
+        this.logger.error(tweet);
       }
 
       const associatedHashtags = acc[date]?.associatedHashtags || {};
@@ -199,7 +208,7 @@ export default class Snscrape {
             return;
           }
           if (!sanitizedHashtag) {
-            logging.error(
+            this.logger.error(
               `Hashtag "${hashtag}" has been sanitized to an empty string -> skipping ${tweet.content}`
             );
             return;
@@ -237,19 +246,53 @@ export default class Snscrape {
   };
 
   public getLastProcessedTweet = () => {
-    logging.debug(`Get Last Processed tweet for ${this.hashtag} ${this.lastProcessedTweet?.date}`);
+    this.logger.debug(
+      `Get Last Processed tweet for ${this.hashtag} ${this.lastProcessedTweet?.date}`
+    );
     return this.lastProcessedTweet;
   };
 
   public getFirstProcessedTweet = () => {
-    logging.debug(
+    this.logger.debug(
       `Get First Processed tweet for ${this.hashtag} ${this.firstProcessedTweet?.date}`
     );
     return this.firstProcessedTweet;
   };
 
+  public getUsers = (): User[] => {
+    this.logger.debug(`Get users from tweets for ${this.hashtag}`);
+    const uniqueUsers = {};
+    this.tweets.forEach((tweet) => (uniqueUsers[tweet.user.id] = tweet.user));
+    return Object.values(uniqueUsers);
+  };
+
+  public getTweets = () => {
+    return this.tweets;
+  };
+
+  static getUser = (
+    username: string
+  ): { status: 'active' | 'notfound' | 'suspended'; user?: User } => {
+    const cmd = `${SNSCRAPE_PATH} --with-entity --max-results 0 --jsonl twitter-user ${username}`;
+
+    try {
+      const user = execCmd(cmd);
+
+      if (!user) {
+        return {
+          status: 'notfound',
+        };
+      }
+      return { status: 'active', user: JSON.parse(user) };
+    } catch (e) {
+      return {
+        status: 'suspended',
+      };
+    }
+  };
+
   public purge = () => {
-    logging.debug(`Remove ${this.dir}`);
+    this.logger.debug(`Remove ${this.dir}`);
     rimraf.sync(this.dir);
   };
 }
