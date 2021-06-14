@@ -1,5 +1,6 @@
 app: 'ima-processor-production'
 repository: 'https://github.com/ambanum/information-manipulation-analyzer-processor.git'
 branch: 'main'
+app_port: '7022'
 env_file: '.env.production'
 nb_processors: '2'

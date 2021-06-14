@@ -48,6 +48,8 @@
     restart_policy: unless-stopped
     env:
       PROCESSOR_ID: '1'
+    ports:
+      - '{{ app_port }}:4000'
 
 - name: Start the second container
   become: yes
@@ -62,6 +64,7 @@
       PROCESSOR_ID: '2'
       NB_TWEETS_TO_SCRAPE: '6000'
       MIN_PRIORITY: '2'
+      API: 'false'
 
 - name: Prune containers and images
   become: yes

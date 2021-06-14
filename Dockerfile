@@ -1,5 +1,8 @@
 FROM python:3.9-slim
 
+
+EXPOSE 4000
+
 ARG ENV_FILE=".env.production"
 
 # Create folder and user
