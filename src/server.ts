@@ -10,6 +10,7 @@ interface ServerProps {
   logger: typeof logging;
 }
 
+const SERVER_PORT = process.env.SERVER_PORT || 4000;
 export default class Server {
   private processorId: ServerProps['processorId'];
   private logger?: ServerProps['logger'];
@@ -40,8 +41,8 @@ export default class Server {
       }
     });
 
-    this.app.listen(process.env.SERVER_PORT, () => {
-      this.logger.info(`The application is listening on port ${process.env.SERVER_PORT}!`);
+    this.app.listen(SERVER_PORT, () => {
+      this.logger.info(`The application is listening on port ${SERVER_PORT}!`);
     });
   };
 }
