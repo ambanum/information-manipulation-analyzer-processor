@@ -3,6 +3,7 @@ import * as logging from 'common/logging';
 import express, { Express } from 'express';
 
 import Scraper from 'common/node-snscrape';
+import { getBotScore } from 'botscore';
 
 interface ServerProps {
   processorId: string;
@@ -23,9 +24,19 @@ export default class Server {
   init = () => {
     this.app.get('/scrape/twitter/user/:username', (req, res) => {
       try {
-        res.json(Scraper.getUser(req.params.username));
+        const scrapeUser = Scraper.getUser(req.params.username);
+
+        res.json(scrapeUser);
       } catch (error) {
         res.json({ status: 'ko', message: 'User not found', error: error.toString() });
+      }
+    });
+
+    this.app.get('/scrape/twitter/user/:username/botscore', async (req, res) => {
+      try {
+        res.json(await getBotScore(req.params.username));
+      } catch (error) {
+        res.json({ status: 'ko', message: 'Score not found', error: error.toString() });
       }
     });
 
