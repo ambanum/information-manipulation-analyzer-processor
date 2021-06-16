@@ -1,3 +1,5 @@
+import peren from './providers/peren';
+
 export interface BotScoreResponse {
   botScore?: number;
   botScoreProvider?: string;
@@ -11,9 +13,7 @@ export interface Adapter {
 
 const BOT_SCORE_PROVIDER = process.env.BOT_SCORE_PROVIDER;
 
-const adapter: Adapter = BOT_SCORE_PROVIDER
-  ? require(`./providers/${BOT_SCORE_PROVIDER}.ts`).default
-  : {};
+const adapter: Adapter = BOT_SCORE_PROVIDER === 'peren' ? peren : ({} as Adapter);
 
 export const getBotScore = async (username: string) => {
   if (!adapter) {
