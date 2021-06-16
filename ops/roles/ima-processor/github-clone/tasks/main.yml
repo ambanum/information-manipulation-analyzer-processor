@@ -49,6 +49,7 @@
     env:
       PROCESSOR_ID: '1'
       SERVER_PORT: '4000'
+      PEREN_API_KEY: '{{ peren_api_key }}'
     ports:
       - '{{ app_port }}:4000'
 
