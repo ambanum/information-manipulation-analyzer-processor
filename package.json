@@ -8,6 +8,10 @@
   "prettier": "prettier-config-ambanum",
   "scripts": {
     "build": "tsc",
+    "precommit": "(git diff --diff-filter=AM --name-only --staged | grep ops/roles/*/github-clone/vars/ | xargs grep -rL \"ANSIBLE\") && echo \"some vault files are not encrypted\" && exit",
+    "encrypt": "grep -rL \"ANSIBLE\" ./ops/roles/*/github-clone/vars/* | xargs ansible-vault encrypt",
+    "decrypt": "grep -rl \"ANSIBLE\" ./ops/roles/*/github-clone/vars/* | xargs ansible-vault decrypt",
+    "prepare": "husky install",
     "start:hashtag": "NODE_PATH=build NODE_OPTIONS='--max_old_space_size=8192' node build/index.js hashtag",
     "start:server": "NODE_PATH=build NODE_OPTIONS='--max_old_space_size=8192' node build/index.js server",
     "start": "concurrently -r --kill-others --names \"hashtag,server\" \"yarn start:hashtag\" \"yarn start:server\"",
@@ -44,6 +48,7 @@
     "@types/jest": "^26.0.22",
     "@types/mongoose": "^5.10.4",
     "@types/node": "^14.14.32",
+    "husky": "^6.0.0",
     "jest": "^26.6.3",
     "prettier": "^2.2.1",
     "prettier-config-ambanum": "^1.0.1",
