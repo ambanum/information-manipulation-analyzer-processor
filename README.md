@@ -9,7 +9,9 @@ The frontend that will actually log the hashtags to analyze and display the resu
 ## Technical stack
 
 We are using now [Snscrape](https://github.com/JustAnotherArchivist/snscrape) to scrape all the data (twint has been abandoned due to some unstable requests).
-Plan is to migrate Snscrape to the french sovereign bot whenever it will be ready
+Plan is to migrate Snscrape to the french sovereign bot whenever it will be ready.
+
+We are also using a [Bot detection library](https://github.com/ambanum/social-networks-bot-finder) created by AmbNum and that needs to be installed
 
 ## Development
 
@@ -52,6 +54,34 @@ Then launch
 yarn
 yarn dev
 ```
+
+## bot detection
+
+In order to use the bot detection functionnality, you need to get a provider.
+
+### social-networks-bot-finder
+
+We have created an open source one which we can use. See [social-networks-bot-finder](https://github.com/ambanum/social-networks-bot-finder)
+
+In order to impletement it you need to install it somewhere on your machine and add to `.env.local` two environment variables
+
+```
+BOT_SCORE_PROVIDER=social-networks-bot-finder
+BOT_SCORE_SOCIAL_NETWORKS_PATH=~/Workspace/ambanum/social-networks-bot-finder/bot-finder.py
+```
+
+### PEReN webservice
+
+Another provider that is available is the API of the PEReN for which you need an api key
+
+In order to impletement it you need to add to `.env.local` two environment variables
+
+```
+BOT_SCORE_PROVIDER=peren
+PEREN_API_KEY=XXXX
+```
+
+### soci
 
 ## Deployment
 
