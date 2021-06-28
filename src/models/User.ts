@@ -1,23 +1,39 @@
-import { Document, Model, Schema, model } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
-export interface User extends Document {
+export interface UserBotScore {
+  botScore?: number;
+  botScoreProvider?: string;
+  botScoreUpdatedAt?: string | Date;
+  botScoreMetadata?: any;
+}
+export interface BasicUser extends Document {
   id: string;
   platformId: 'twitter';
   username: string;
   displayname: string;
-  description: string;
-  verified: boolean;
-  created: Date;
-  followersCount: number;
-  friendsCount: number;
-  statusesCount: number;
-  favouritesCount: number;
-  listedCount: number;
-  mediaCount: number;
-  location: string;
-  linkUrl: string;
-  profileImageUrl: string;
+  description?: string;
+  verified?: boolean;
+  created?: string;
+  followersCount?: number;
+  friendsCount?: number;
+  statusesCount?: number;
+  favouritesCount?: number;
+  listedCount?: number;
+  mediaCount?: number;
+  location?: string;
+  linkUrl?: string;
+  profileImageUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+
+  // bot score
+  botScore?: number;
+  botScoreProvider?: string;
+  botScoreUpdatedAt?: string;
+  botScoreMetadata?: any;
 }
+
+export type User = BasicUser & UserBotScore;
 
 const UserSchema = new Schema(
   {
@@ -37,6 +53,11 @@ const UserSchema = new Schema(
     location: { type: String, required: true, index: true },
     linkUrl: { type: String, required: true, index: true },
     profileImageUrl: { type: String, required: true, index: true },
+    // bot score
+    botScore: { type: Number, required: true, index: true },
+    botScoreProvider: { type: String, required: true, index: true },
+    botScoreUpdatedAt: { type: Date, required: true, index: true },
+    botScoreMetadata: { type: Schema.Types.Mixed },
   },
   {
     strict: 'throw',
@@ -44,6 +65,4 @@ const UserSchema = new Schema(
   }
 );
 
-const UserModel: Model<User> = model('User', UserSchema);
-
-export default UserModel;
+export default mongoose?.models?.User || mongoose.model('User', UserSchema);
