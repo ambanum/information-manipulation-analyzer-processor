@@ -63,4 +63,6 @@ WORKDIR /home/ambnum
 # RUN pip3 install --user --upgrade "git+https://github.com/ambanum/twint.git@origin/master#egg=twint"
 RUN pip3 install git+https://github.com/JustAnotherArchivist/snscrape.git
 
+ENV PATH="/home/ambnum/.local/bin:${PATH}"
+
 CMD [ "yarn", "start" ]
