@@ -1,7 +1,7 @@
 import { Adapter } from '../index';
 import { execCmd } from 'common/cmd-utils';
 
-const BOT_SCORE_SOCIAL_NETWORKS_PATH = process.env.BOT_SCORE_SOCIAL_NETWORKS_PATH || 'bot-score';
+const BOT_SCORE_SOCIAL_NETWORKS_PATH = process.env.BOT_SCORE_SOCIAL_NETWORKS_PATH || 'botfinder';
 
 export interface BotScore {
   botScore: number;
