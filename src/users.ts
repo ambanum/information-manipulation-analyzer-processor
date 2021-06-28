@@ -43,6 +43,7 @@ export default class UserPoller {
         await user.save({ validateBeforeSave: false });
       } catch (e) {
         this.logger.error(`Could not get for ${user.username}`);
+        this.logger.error(e);
       }
     }
 
