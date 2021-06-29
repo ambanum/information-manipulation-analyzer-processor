@@ -35,7 +35,7 @@ const getBotScore: Adapter['getBotScore'] = async (username: string, options) =>
   if (options.rawJson) {
     cmd = `${BOT_SCORE_SOCIAL_NETWORKS_PATH} --rawjson '${options.rawJson.replace(/'/gi, ' ')}'`;
   } else {
-    cmd = `${BOT_SCORE_SOCIAL_NETWORKS_PATH} --name  ${username}`;
+    cmd = `${BOT_SCORE_SOCIAL_NETWORKS_PATH} --username  ${username}`;
   }
   const result = execCmd(cmd);
 
