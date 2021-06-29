@@ -1,3 +1,4 @@
+import botFinder from './providers/social-networks-bot-finder';
 import peren from './providers/peren';
 
 export interface BotScoreResponse {
@@ -7,20 +8,29 @@ export interface BotScoreResponse {
   botScoreMetadata?: any;
 }
 
+export interface GetBotScoreOptions {
+  rawJson?: string;
+}
+
 export interface Adapter {
-  getBotScore: (username: string) => Promise<BotScoreResponse>;
+  getBotScore: (username: string, options?: GetBotScoreOptions) => Promise<BotScoreResponse>;
 }
 
 const BOT_SCORE_PROVIDER = process.env.BOT_SCORE_PROVIDER;
 
-const adapter: Adapter = BOT_SCORE_PROVIDER === 'peren' ? peren : ({} as Adapter);
+const adapter: Adapter =
+  BOT_SCORE_PROVIDER === 'peren'
+    ? peren
+    : BOT_SCORE_PROVIDER === 'social-networks-bot-finder'
+    ? botFinder
+    : ({} as Adapter);
 
-export const getBotScore = async (username: string) => {
+export const getBotScore = async (username: string, options: GetBotScoreOptions = {}) => {
   if (!adapter) {
     return {
       botScore: -1,
     };
   }
 
-  return adapter.getBotScore(username);
+  return adapter.getBotScore(username, options);
 };

@@ -6,15 +6,16 @@ import * as logging from 'common/logging';
 import HashtagPoller from './hashtags';
 import Scraper from 'common/node-snscrape';
 import Server from './server';
+import UserPoller from './users';
 import dbConnect from 'common/db';
 // @ts-ignore
 import packageJson from '../package.json';
 
 const { version } = packageJson;
 
-const service: 'hashtag' | 'server' | string = process.argv[2];
+const service: 'hashtag' | 'server' | 'user' | string = process.argv[2];
 
-if (!['hashtag', 'server'].includes(service)) {
+if (!['hashtag', 'server', 'user'].includes(service)) {
   console.error("You need to specify a service 'hashtag' | 'server'");
   process.exit();
 }
@@ -46,9 +47,14 @@ const processorMetadata = {
       logging.info('No API started');
     }
   } else {
-    const hashtagPoller = new HashtagPoller({ processorId: PROCESSOR });
-    await hashtagPoller.init();
+    if (service === 'user') {
+      const userPoller = new UserPoller({ processorId: PROCESSOR });
+      await userPoller.pollUsers();
+    } else {
+      const hashtagPoller = new HashtagPoller({ processorId: PROCESSOR });
+      await hashtagPoller.init();
 
-    await hashtagPoller.pollHashtags();
+      await hashtagPoller.pollHashtags();
+    }
   }
 })();

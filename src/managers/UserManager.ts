@@ -43,3 +43,17 @@ export const batchUpsert = (session: ClientSession) => async (users: any[], plat
     throw e;
   }
 };
+
+export const getOutdatedScoreBotUsers = async (
+  { limit = 100 }: { limit: number } = { limit: 100 }
+) => {
+  const date = new Date();
+  date.setDate(date.getDate() - 10);
+  return UserModel.find({
+    $or: [{ botScoreUpdatedAt: { $lte: date } }, { botScoreUpdatedAt: { $exists: false } }],
+  }).limit(limit);
+};
+
+export const get = async ({ username }: { username: string }) => {
+  return UserModel.findOne({ username });
+};
