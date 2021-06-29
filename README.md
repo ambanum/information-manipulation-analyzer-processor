@@ -67,7 +67,7 @@ In order to impletement it you need to install it somewhere on your machine and 
 
 ```
 BOT_SCORE_PROVIDER=social-networks-bot-finder
-BOT_SCORE_SOCIAL_NETWORKS_PATH=~/Workspace/ambanum/social-networks-bot-finder/bot-finder.py
+BOT_SCORE_SOCIAL_NETWORKS_PATH=botfinder
 ```
 
 ### PEReN webservice
@@ -86,3 +86,11 @@ PEREN_API_KEY=XXXX
 ## Deployment
 
 If you are part of `AmbNum`, you can use the deploy scripts in the `package.json`
+
+# Troubleshooting
+
+## ModuleNotFoundError: No module named 'numpy'
+
+This may happen if you run `yarn docker:run` on a M1
+
+If this happen, well I did not find any solution except testing by building on another machine
