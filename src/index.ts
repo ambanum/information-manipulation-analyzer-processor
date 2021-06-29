@@ -46,14 +46,15 @@ const processorMetadata = {
     } else {
       logging.info('No API started');
     }
-  }
-  if (service === 'user') {
-    const userPoller = new UserPoller({ processorId: PROCESSOR });
-    await userPoller.pollUsers();
   } else {
-    const hashtagPoller = new HashtagPoller({ processorId: PROCESSOR });
-    await hashtagPoller.init();
+    if (service === 'user') {
+      const userPoller = new UserPoller({ processorId: PROCESSOR });
+      await userPoller.pollUsers();
+    } else {
+      const hashtagPoller = new HashtagPoller({ processorId: PROCESSOR });
+      await hashtagPoller.init();
 
-    await hashtagPoller.pollHashtags();
+      await hashtagPoller.pollHashtags();
+    }
   }
 })();
