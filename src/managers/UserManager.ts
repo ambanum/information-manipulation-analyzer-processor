@@ -53,3 +53,7 @@ export const getOutdatedScoreBotUsers = async (
     $or: [{ botScoreUpdatedAt: { $lte: date } }, { botScoreUpdatedAt: { $exists: false } }],
   }).limit(limit);
 };
+
+export const get = async ({ username }: { username: string }) => {
+  return UserModel.findOne({ username });
+};
