@@ -50,8 +50,27 @@ const getBotScore: Adapter['getBotScore'] = async (username: string, options) =>
   };
 };
 
+const getBotScores: Adapter['getBotScores'] = async (options) => {
+  let cmd: string;
+
+  if (options.rawJson) {
+    cmd = `${BOT_SCORE_SOCIAL_NETWORKS_PATH} --rawjson '${options.rawJson.replace(/'/gi, ' ')}'`;
+  }
+  const result = execCmd(cmd);
+
+  const items: BotScore[] = JSON.parse(result);
+
+  return items.map(({ botScore, details }) => ({
+    botScore,
+    botScoreProvider: 'social-networks-bot-finder',
+    botScoreUpdatedAt: new Date(),
+    botScoreMetadata: details,
+  }));
+};
+
 const adapter: Adapter = {
   getBotScore,
+  getBotScores,
 };
 
 export default adapter;

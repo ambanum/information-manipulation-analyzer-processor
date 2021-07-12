@@ -2,7 +2,7 @@ import * as ProcessorManager from 'managers/ProcessorManager';
 import * as UserManager from 'managers/UserManager';
 import * as logging from 'common/logging';
 
-import { getBotScore } from 'botscore';
+import { getBotScores } from 'botscore';
 
 const logPrefix = '[user]';
 
@@ -21,7 +21,7 @@ export default class UserPoller {
   }
 
   async pollUsers() {
-    const items = await UserManager.getOutdatedScoreBotUsers({ limit: 100 });
+    const items = await UserManager.getOutdatedScoreBotUsers({ limit: 500 });
 
     if (items.length === 0) {
       await ProcessorManager.update(this.processorId, { lastPollAt: new Date() });
@@ -33,9 +33,12 @@ export default class UserPoller {
 
     await ProcessorManager.update(this.processorId, { lastProcessedAt: new Date() });
 
+    const botScores = await getBotScores({ rawJson: JSON.stringify(items) });
+
+    let i = 0;
     for (const user of items) {
       try {
-        const botScore = await getBotScore(user.username, { rawJson: JSON.stringify(user) });
+        const botScore = botScores[i++];
         user.botScore = botScore.botScore;
         user.botScoreUpdatedAt = botScore.botScoreUpdatedAt;
         user.botScoreProvider = botScore.botScoreProvider;
