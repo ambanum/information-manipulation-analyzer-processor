@@ -50,7 +50,7 @@ export default class UserPoller {
         }
       }
     } catch (e) {
-      const newLimit = Math.round(limit / 2);
+      const newLimit = Math.round(Math.min(items.length, limit) / 2);
       this.logger.error(`Could not retrieve all bot scores, trying with ${newLimit} items`);
       this.logger.error(e.toString());
       return process.nextTick(this.pollUsers.bind(this, newLimit));
