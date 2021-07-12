@@ -29,8 +29,6 @@ export default class UserPoller {
       return process.nextTick(this.pollUsers.bind(this, limit));
     }
 
-    this.logger.info(`------- ${items.length} item(s) to go -------`);
-
     await ProcessorManager.update(this.processorId, { lastProcessedAt: new Date() });
     try {
       const botScores = await getBotScores({ rawJson: JSON.stringify(items) });
@@ -55,6 +53,8 @@ export default class UserPoller {
       this.logger.error(e.toString());
       return process.nextTick(this.pollUsers.bind(this, newLimit));
     }
+
+    this.logger.info(`------- ${items.length} processed -------`);
 
     return process.nextTick(this.pollUsers.bind(this, DEFAULT_LIMIT));
   }
