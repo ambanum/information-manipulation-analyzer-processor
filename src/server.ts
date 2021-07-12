@@ -24,9 +24,14 @@ export default class Server {
   }
 
   init = () => {
-    this.app.get('/scrape/twitter/user/:username', (req, res) => {
+    this.app.get('/scrape/twitter/user/:username', async (req, res) => {
       try {
-        const scrapeUser = Scraper.getUser(req.params.username);
+        const { username } = req.params;
+        const user = await UserManager.get({ username });
+        if (user) {
+          return res.json({ status: 'active', user });
+        }
+        const scrapeUser = Scraper.getUser(username);
 
         res.json(scrapeUser);
       } catch (error) {
