@@ -5,7 +5,7 @@ import * as logging from 'common/logging';
 import { getBotScores } from 'botscore';
 
 const logPrefix = '[user]';
-const DEFAULT_LIMIT = 1000;
+const DEFAULT_LIMIT = 200;
 export default class UserPoller {
   private processorId: string;
   private logger: typeof logging;
