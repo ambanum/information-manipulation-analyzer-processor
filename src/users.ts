@@ -2,10 +2,10 @@ import * as ProcessorManager from 'managers/ProcessorManager';
 import * as UserManager from 'managers/UserManager';
 import * as logging from 'common/logging';
 
-import { getBotScore } from 'botscore';
+import { getBotScores } from 'botscore';
 
 const logPrefix = '[user]';
-
+const DEFAULT_LIMIT = 200;
 export default class UserPoller {
   private processorId: string;
   private logger: typeof logging;
@@ -20,35 +20,42 @@ export default class UserPoller {
     };
   }
 
-  async pollUsers() {
-    const items = await UserManager.getOutdatedScoreBotUsers({ limit: 100 });
+  async pollUsers(limit = DEFAULT_LIMIT) {
+    const items = await UserManager.getOutdatedScoreBotUsers({ limit });
 
     if (items.length === 0) {
       await ProcessorManager.update(this.processorId, { lastPollAt: new Date() });
       this.logger.debug(`No more items to go, relaunching`);
-      return process.nextTick(this.pollUsers.bind(this));
+      return process.nextTick(this.pollUsers.bind(this, limit));
     }
-
-    this.logger.info(`------- ${items.length} item(s) to go -------`);
 
     await ProcessorManager.update(this.processorId, { lastProcessedAt: new Date() });
+    try {
+      const botScores = await getBotScores({ rawJson: JSON.stringify(items) });
 
-    for (const user of items) {
-      try {
-        const botScore = await getBotScore(user.username, { rawJson: JSON.stringify(user) });
-        user.botScore = botScore.botScore;
-        user.botScoreUpdatedAt = botScore.botScoreUpdatedAt;
-        user.botScoreProvider = botScore.botScoreProvider;
-        user.botScoreMetadata = botScore.botScoreMetadata;
-        await user.save({ validateBeforeSave: false });
-      } catch (e) {
-        this.logger.error(`Could not get for ${user.username}`);
-        this.logger.error(e);
+      let i = 0;
+      for (const user of items) {
+        try {
+          const botScore = botScores[i++];
+          user.botScore = botScore.botScore;
+          user.botScoreUpdatedAt = botScore.botScoreUpdatedAt;
+          user.botScoreProvider = botScore.botScoreProvider;
+          user.botScoreMetadata = botScore.botScoreMetadata;
+          await user.save({ validateBeforeSave: false });
+        } catch (e) {
+          this.logger.error(`Could not get for ${user.username}`);
+          this.logger.error(e);
+        }
       }
+    } catch (e) {
+      const newLimit = Math.round(Math.min(items.length, limit) / 2);
+      this.logger.error(`Could not retrieve all bot scores, trying with ${newLimit} items`);
+      this.logger.error(e.toString());
+      return process.nextTick(this.pollUsers.bind(this, newLimit));
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    this.logger.info(`------- ${items.length} processed -------`);
 
-    return process.nextTick(this.pollUsers.bind(this));
+    return process.nextTick(this.pollUsers.bind(this, DEFAULT_LIMIT));
   }
 }

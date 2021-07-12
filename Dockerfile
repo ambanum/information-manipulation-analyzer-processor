@@ -30,6 +30,7 @@ RUN apt-get install -y curl \
 # install code
 WORKDIR /home/ambnum
 ENV NODE_ENV=production
+ENV NODE_OPTIONS='--max_old_space_size=8192'
 
 ## install all packages even with dev dependencies to be able to launch typescript build
 COPY package.json /home/ambnum
@@ -44,7 +45,7 @@ RUN yarn build
 RUN chmod 777 /home/ambnum/build && \
     chown ambnum:ambnum /home/ambnum/build
 
-RUN pip install social-networks-bot-finder
+RUN pip install social-networks-bot-finder==1.1.1
 
 # clean
 RUN apt-get clean autoclean && \

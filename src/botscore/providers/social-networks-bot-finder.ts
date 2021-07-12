@@ -6,6 +6,7 @@ const BOT_SCORE_SOCIAL_NETWORKS_PATH = process.env.BOT_SCORE_SOCIAL_NETWORKS_PAT
 export interface BotScore {
   botScore: number;
   details: {
+    base_value: number;
     statuses_count: number;
     followers_count: number;
     favourites_count: number;
@@ -17,7 +18,7 @@ export interface BotScore {
     age: number;
     tweet_frequence: number;
     followers_growth_rate: number;
-    friends_growth_rate: number;
+    favourites_growth_rate: number;
     listed_growth_rate: number;
     friends_followers_ratio: number;
     followers_friend_ratio: number;
@@ -49,8 +50,27 @@ const getBotScore: Adapter['getBotScore'] = async (username: string, options) =>
   };
 };
 
+const getBotScores: Adapter['getBotScores'] = async (options) => {
+  let cmd: string;
+
+  if (options.rawJson) {
+    cmd = `${BOT_SCORE_SOCIAL_NETWORKS_PATH} --rawjson '${options.rawJson.replace(/'/gi, ' ')}'`;
+  }
+  const result = execCmd(cmd);
+
+  const items: BotScore[] = JSON.parse(result);
+
+  return items.map(({ botScore, details }) => ({
+    botScore,
+    botScoreProvider: 'social-networks-bot-finder',
+    botScoreUpdatedAt: new Date(),
+    botScoreMetadata: details,
+  }));
+};
+
 const adapter: Adapter = {
   getBotScore,
+  getBotScores,
 };
 
 export default adapter;
