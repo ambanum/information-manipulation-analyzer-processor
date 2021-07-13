@@ -29,7 +29,7 @@
     "deploy:production": "ansible-playbook ops/site.yml -i ops/inventories/production.yml -e \"ENV=production\" -vvv",
     "docker:build": "docker build --build-arg ENV_FILE=.env.local -t $npm_package_name .",
     "docker:run": "(docker rm $npm_package_name || true) && docker run --rm -p 4000:4000 -e PROCESSOR_NAME=docker -e TWINT_PATH=/home/ambnum/.local/bin/twint -e SNSCRAPE_PATH=/home/ambnum/.local/bin/snscrape  --name $npm_package_name -it $npm_package_name",
-    "docker:run-2": "(docker rm information-manipulation-analyzer-processor-2 || true) && docker run --rm -e API=false -e PROCESSOR_ID=2 -e PROCESSOR_NAME=docker -e TWINT_PATH=/home/ambnum/.local/bin/twint -e SNSCRAPE_PATH=/home/ambnum/.local/bin/snscrape -e NB_TWEETS_TO_SCRAPE=6000 --name information-manipulation-analyzer-processor-2 -it $npm_package_name",
+    "docker:run-2": "(docker rm information-manipulation-analyzer-processor-2 || true) && docker run --rm -e API=false -e USER_BOT_SCORES=false -e PROCESSOR_ID=2 -e PROCESSOR_NAME=docker -e TWINT_PATH=/home/ambnum/.local/bin/twint -e SNSCRAPE_PATH=/home/ambnum/.local/bin/snscrape -e NB_TWEETS_TO_SCRAPE=6000 --name information-manipulation-analyzer-processor-2 -it $npm_package_name",
     "docker:ssh": "docker exec -it $npm_package_name /bin/bash",
     "test": "jest"
   },

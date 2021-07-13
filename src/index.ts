@@ -51,8 +51,12 @@ const processorMetadata = {
     }
   } else {
     if (service === 'user') {
-      const userPoller = new UserPoller({ processorId: PROCESSOR });
-      await userPoller.pollUsers();
+      if (process.env.USER_BOT_SCORES !== 'false') {
+        const userPoller = new UserPoller({ processorId: PROCESSOR });
+        await userPoller.pollUsers();
+      } else {
+        logging.info('No USER_BOT_SCORES started');
+      }
     } else {
       const hashtagPoller = new HashtagPoller({ processorId: PROCESSOR });
       await hashtagPoller.init();
