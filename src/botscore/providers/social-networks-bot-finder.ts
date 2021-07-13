@@ -1,5 +1,7 @@
 import { Adapter } from '../index';
 import { execCmd } from 'common/cmd-utils';
+import fs from 'fs';
+import temp from 'temp';
 
 const BOT_SCORE_SOCIAL_NETWORKS_PATH = process.env.BOT_SCORE_SOCIAL_NETWORKS_PATH || 'botfinder';
 
@@ -53,10 +55,12 @@ const getBotScore: Adapter['getBotScore'] = async (username: string, options) =>
 const getBotScores: Adapter['getBotScores'] = async (options) => {
   let cmd: string;
 
-  if (options.rawJson) {
-    cmd = `${BOT_SCORE_SOCIAL_NETWORKS_PATH} --rawjson '${options.rawJson.replace(/'/gi, ' ')}'`;
-  }
+  const tmpFile = temp.path({ suffix: '.json' });
+  fs.writeFileSync(tmpFile, options.rawJson);
+  cmd = `${BOT_SCORE_SOCIAL_NETWORKS_PATH} --jsonfile '${tmpFile}'`;
   const result = execCmd(cmd, { maxBuffer: 50 * 1024 * 1024 });
+
+  fs.unlinkSync(tmpFile);
 
   const items: BotScore[] = JSON.parse(result);
 

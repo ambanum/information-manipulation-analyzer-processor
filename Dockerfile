@@ -45,7 +45,7 @@ RUN yarn build
 RUN chmod 777 /home/ambnum/build && \
     chown ambnum:ambnum /home/ambnum/build
 
-RUN pip install social-networks-bot-finder==1.1.1
+RUN pip install social-networks-bot-finder==1.2.0
 
 # clean
 RUN apt-get clean autoclean && \
