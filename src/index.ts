@@ -3,6 +3,8 @@ import './common/bootstrap';
 import * as ProcessorManager from 'managers/ProcessorManager';
 import * as logging from 'common/logging';
 
+import { getProvider, getVersion } from 'botscore';
+
 import HashtagPoller from './hashtags';
 import Scraper from 'common/node-snscrape';
 import Server from './server';
@@ -26,6 +28,7 @@ const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}_${service}`;
 
 const processorMetadata = {
   version,
+  botScore: `${getProvider()}:${getVersion()}`,
   snscrape: Scraper.getVersion(),
   scraperPath: Scraper.getPath(),
   MONGODB_URI: process.env.MONGODB_URI,
