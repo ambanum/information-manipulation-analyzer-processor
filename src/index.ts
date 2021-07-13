@@ -3,6 +3,8 @@ import './common/bootstrap';
 import * as ProcessorManager from 'managers/ProcessorManager';
 import * as logging from 'common/logging';
 
+import { getProvider, getVersion } from 'botscore';
+
 import HashtagPoller from './hashtags';
 import Scraper from 'common/node-snscrape';
 import Server from './server';
@@ -26,6 +28,7 @@ const PROCESSOR = `${PROCESSOR_NAME}_${PROCESSOR_ID}_${service}`;
 
 const processorMetadata = {
   version,
+  botScore: `${getProvider()}:${getVersion()}`,
   snscrape: Scraper.getVersion(),
   scraperPath: Scraper.getPath(),
   MONGODB_URI: process.env.MONGODB_URI,
@@ -48,8 +51,12 @@ const processorMetadata = {
     }
   } else {
     if (service === 'user') {
-      const userPoller = new UserPoller({ processorId: PROCESSOR });
-      await userPoller.pollUsers();
+      if (process.env.USER_BOT_SCORES !== 'false') {
+        const userPoller = new UserPoller({ processorId: PROCESSOR });
+        await userPoller.pollUsers();
+      } else {
+        logging.info('No USER_BOT_SCORES started');
+      }
     } else {
       const hashtagPoller = new HashtagPoller({ processorId: PROCESSOR });
       await hashtagPoller.init();

@@ -67,6 +67,7 @@
       NB_TWEETS_TO_SCRAPE: '6000'
       MIN_PRIORITY: '2'
       API: 'false'
+      USER_BOT_SCORES: 'false'
 
 - name: Prune containers and images
   become: yes

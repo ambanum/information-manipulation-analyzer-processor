@@ -5,7 +5,7 @@ import * as logging from 'common/logging';
 import { getBotScores } from 'botscore';
 
 const logPrefix = '[user]';
-const DEFAULT_LIMIT = 200;
+const DEFAULT_LIMIT = 2000;
 export default class UserPoller {
   private processorId: string;
   private logger: typeof logging;
@@ -48,8 +48,11 @@ export default class UserPoller {
         }
       }
     } catch (e) {
-      const newLimit = Math.round(Math.min(items.length, limit) / 2);
-      this.logger.error(`Could not retrieve all bot scores, trying with ${newLimit} items`);
+      const nbItemsTried = Math.min(items.length, limit);
+      const newLimit = Math.round(nbItemsTried / 2);
+      this.logger.error(
+        `Could not retrieve ${nbItemsTried} bot scores, trying with ${newLimit} items`
+      );
       this.logger.error(e.toString());
       return process.nextTick(this.pollUsers.bind(this, newLimit));
     }

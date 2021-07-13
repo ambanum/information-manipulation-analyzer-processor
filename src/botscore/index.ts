@@ -16,6 +16,7 @@ export interface GetBotScoreOptions {
 export interface Adapter {
   getBotScore: (username: string, options?: GetBotScoreOptions) => Promise<BotScoreResponse>;
   getBotScores?: (options?: GetBotScoreOptions) => Promise<BotScoresResponse>;
+  getVersion: () => string;
 }
 
 const BOT_SCORE_PROVIDER = process.env.BOT_SCORE_PROVIDER;
@@ -38,10 +39,16 @@ export const getBotScore = async (username: string, options: GetBotScoreOptions 
 };
 export const getBotScores = async (options: GetBotScoreOptions = {}) => {
   if (!adapter) {
-    return {
-      botScore: -1,
-    };
+    return [];
   }
 
   return adapter.getBotScores(options);
 };
+export const getVersion = () => {
+  if (!adapter) {
+    return '';
+  }
+
+  return adapter.getVersion();
+};
+export const getProvider = () => BOT_SCORE_PROVIDER;
