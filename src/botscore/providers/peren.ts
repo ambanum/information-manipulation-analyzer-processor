@@ -43,8 +43,13 @@ const getBotScore: Adapter['getBotScore'] = async (username: string) => {
   };
 };
 
+const getVersion: Adapter['getVersion'] = () => {
+  return 'unknown';
+};
+
 const adapter: Adapter = {
   getBotScore,
+  getVersion,
 };
 
 export default adapter;

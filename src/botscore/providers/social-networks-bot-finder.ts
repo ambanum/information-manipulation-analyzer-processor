@@ -56,7 +56,7 @@ const getBotScores: Adapter['getBotScores'] = async (options) => {
   if (options.rawJson) {
     cmd = `${BOT_SCORE_SOCIAL_NETWORKS_PATH} --rawjson '${options.rawJson.replace(/'/gi, ' ')}'`;
   }
-  const result = execCmd(cmd);
+  const result = execCmd(cmd, { maxBuffer: 50 * 1024 * 1024 });
 
   const items: BotScore[] = JSON.parse(result);
 
@@ -68,9 +68,15 @@ const getBotScores: Adapter['getBotScores'] = async (options) => {
   }));
 };
 
+const getVersion: Adapter['getVersion'] = () => {
+  const cmd = `${BOT_SCORE_SOCIAL_NETWORKS_PATH} --version`;
+  return execCmd(cmd);
+};
+
 const adapter: Adapter = {
   getBotScore,
   getBotScores,
+  getVersion,
 };
 
 export default adapter;
