@@ -4,8 +4,6 @@ import * as logging from 'common/logging';
 import { GetBotScoreOptions, getBotScore } from 'botscore';
 import express, { Express } from 'express';
 
-import Scraper from 'common/node-snscrape';
-
 interface ServerProps {
   processorId: string;
   logger: typeof logging;
@@ -27,13 +25,9 @@ export default class Server {
     this.app.get('/scrape/twitter/user/:username', async (req, res) => {
       try {
         const { username } = req.params;
-        const user = await UserManager.get({ username });
-        if (user) {
-          return res.json({ status: 'active', user });
-        }
-        const scrapeUser = Scraper.getUser(username);
+        const user = await UserManager.getScrapedUser({ username });
 
-        res.json(scrapeUser);
+        res.json(user);
       } catch (error) {
         res.json({ status: 'ko', message: 'User not found', error: error.toString() });
       }
@@ -42,10 +36,14 @@ export default class Server {
     this.app.get('/scrape/twitter/user/:username/botscore', async (req, res) => {
       try {
         const { username } = req.params;
-        const user = await UserManager.get({ username });
+        const { user } = await UserManager.getScrapedUser({ username });
         const options: GetBotScoreOptions = {};
 
-        if (user.botScore) {
+        if (!user) {
+          return res.json({});
+        }
+
+        if (user?.botScore) {
           return res.json({
             botScore: user.botScore,
             botScoreUpdatedAt: user.botScoreUpdatedAt,
@@ -54,20 +52,14 @@ export default class Server {
           });
         }
 
-        if (user) {
-          options.rawJson = JSON.stringify(user);
-        }
-
+        options.rawJson = JSON.stringify(user);
         const botScore = await getBotScore(req.params.username, options);
-
-        if (user) {
-          user.botScore = botScore.botScore;
-          user.botScoreUpdatedAt = botScore.botScoreUpdatedAt;
-          user.botScoreProvider = botScore.botScoreProvider;
-          user.botScoreMetadata = botScore.botScoreMetadata;
-          await user.save({ validateBeforeSave: false });
-        }
-        res.json(await getBotScore(req.params.username));
+        user.botScore = botScore.botScore;
+        user.botScoreUpdatedAt = botScore.botScoreUpdatedAt;
+        user.botScoreProvider = botScore.botScoreProvider;
+        user.botScoreMetadata = botScore.botScoreMetadata;
+        await user.save({ validateBeforeSave: false });
+        return res.json(botScore);
       } catch (error) {
         res.json({ status: 'ko', message: 'Score not found', error: error.toString() });
       }

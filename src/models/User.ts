@@ -54,9 +54,9 @@ const UserSchema = new Schema(
     linkUrl: { type: String, required: true, index: true },
     profileImageUrl: { type: String, required: true, index: true },
     // bot score
-    botScore: { type: Number, required: true, index: true },
-    botScoreProvider: { type: String, required: true, index: true },
-    botScoreUpdatedAt: { type: Date, required: true, index: true },
+    botScore: { type: Number, index: true },
+    botScoreProvider: { type: String, index: true },
+    botScoreUpdatedAt: { type: Date, index: true },
     botScoreMetadata: { type: Schema.Types.Mixed },
   },
   {
