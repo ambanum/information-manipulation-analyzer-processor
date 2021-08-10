@@ -20,6 +20,13 @@ export enum SearchTypes {
   CASHTAG = 'CASHTAG',
 }
 
+export interface SearchGraph {
+  graphUrl?: string;
+  graphProvider?: string;
+  graphUpdatedAt?: string;
+  graphMetadata?: any;
+}
+
 export interface Search extends Document {
   name: string;
   status: SearchStatuses;
@@ -47,6 +54,12 @@ const schema = new Schema<Search>(
     newestProcessedDate: { type: Date, index: true },
     error: { type: String, index: true },
     scrapeVersion: { type: Number, index: true },
+
+    // graph
+    graphUrl: { type: String, index: true },
+    graphProvider: { type: String, index: true },
+    graphUpdatedAt: { type: Date, index: true },
+    graphMetadata: { type: Schema.Types.Mixed },
   },
   {
     strict: 'throw',

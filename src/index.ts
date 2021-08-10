@@ -5,6 +5,7 @@ import * as logging from 'common/logging';
 
 import { getProvider, getVersion } from 'botscore';
 
+import GraphPoller from './graph';
 import Scraper from 'common/node-snscrape';
 import SearchPoller from './searches';
 import Server from './server';
@@ -15,10 +16,10 @@ import packageJson from '../package.json';
 
 const { version } = packageJson;
 
-const service: 'search' | 'server' | 'user' | string = process.argv[2];
+const service: 'search' | 'server' | 'user' | 'graph' | string = process.argv[2];
 
-if (!['search', 'server', 'user'].includes(service)) {
-  console.error("You need to specify a service 'search' | 'server' | 'user'");
+if (!['search', 'server', 'user', 'graph'].includes(service)) {
+  console.error("You need to specify a service 'search' | 'server'| 'user' | 'graph'");
   process.exit();
 }
 
@@ -57,6 +58,14 @@ const processorMetadata = {
         await userPoller.pollUsers();
       } else {
         logging.info('No USER_BOT_SCORES started');
+      }
+    }
+    if (service === 'graph') {
+      if (process.env.GRAPH_GENERATOR !== 'false') {
+        const graphPoller = new GraphPoller({ processorId: PROCESSOR });
+        await graphPoller.pollHashtags();
+      } else {
+        logging.info('No GRAPH_GENERATOR started');
       }
     } else {
       const searchPoller = new SearchPoller({ processorId: PROCESSOR });
