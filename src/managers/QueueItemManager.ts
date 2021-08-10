@@ -14,7 +14,7 @@ import QueueItemModel from '../models/QueueItem';
 
 interface QueueItemManagerProps {
   processorId: string;
-  logger: typeof logging;
+  logger: logging.Logger;
   session?: ClientSession;
   scrapeVersion: number;
 }
@@ -31,7 +31,7 @@ export default class QueueItemManager {
     MEDIUM: 3,
   };
   constructor({ processorId, logger, session, scrapeVersion }: QueueItemManagerProps) {
-    this.logger = logger || logging;
+    this.logger = logger || logging.getLogger();
     this.processorId = processorId;
     this.session = session;
     this.scrapeVersion = scrapeVersion;

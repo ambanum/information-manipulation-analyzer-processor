@@ -81,7 +81,7 @@ export interface SnscrapeOptions {
   resumeUntilTweetId?: string;
   nbTweetsToScrapeFirstTime?: number;
   nbTweetsToScrape?: number;
-  logger?: typeof logging;
+  logger?: logging.Logger;
 }
 
 const NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT = 1000;
@@ -98,7 +98,7 @@ export default class Snscrape {
   private nbTweetsToScrape?: number;
   private filter?: string;
   private dir: string;
-  private logger: typeof logging;
+  private logger: logging.Logger;
   static platformId = 'twitter';
 
   static getVersion = () => {
@@ -118,7 +118,7 @@ export default class Snscrape {
       logger,
     }: SnscrapeOptions = {}
   ) {
-    this.logger = logger || logging;
+    this.logger = logger || logging.getLogger();
     this.hashtag = hashtag;
     this.dir = path.join(os.tmpdir(), 'information-manipulation-analyzer', hashtag);
 
