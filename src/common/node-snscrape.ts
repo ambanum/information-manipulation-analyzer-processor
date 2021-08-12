@@ -6,6 +6,7 @@ import os from 'os';
 import path from 'path';
 import rimraf from 'rimraf';
 import { sanitizeHashtag } from 'utils/sanitizer';
+import uniq from 'lodash/fp/uniq';
 
 interface User {
   username: string;
@@ -200,29 +201,16 @@ export default class Snscrape {
       }
 
       const associatedHashtags = acc[date]?.associatedHashtags || {};
-      tweet.content
-        .split(/[\s\n\r]/gim)
-        .filter((v) => v.startsWith('#') && v !== '#')
-        .forEach((hashtag) => {
-          const sanitizedHashtag = sanitizeHashtag(hashtag);
-          if (this.hashtag === sanitizedHashtag) {
-            return;
-          }
-          if (!sanitizedHashtag) {
-            this.logger.error(
-              `Hashtag "${hashtag}" has been sanitized to an empty string -> skipping ${tweet.content}`
-            );
-            return;
-          }
 
-          const existingNumber =
-            associatedHashtags[sanitizedHashtag] &&
-            typeof associatedHashtags[sanitizedHashtag] === 'number'
-              ? associatedHashtags[sanitizedHashtag]
-              : 0;
+      uniq(tweet.hashtags.map((hashtag) => hashtag.toLowerCase())).forEach((sanitizedHashtag) => {
+        const existingNumber =
+          associatedHashtags[sanitizedHashtag] &&
+          typeof associatedHashtags[sanitizedHashtag] === 'number'
+            ? associatedHashtags[sanitizedHashtag]
+            : 0;
 
-          associatedHashtags[sanitizedHashtag] = existingNumber + 1;
-        });
+        associatedHashtags[sanitizedHashtag] = existingNumber + 1;
+      });
 
       return {
         ...acc,
