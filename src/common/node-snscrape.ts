@@ -50,7 +50,7 @@ interface Tweet {
   source: string;
   sourceUrl: string;
   sourceLabel: string;
-  media: null;
+  media: any[] | null;
   retweetedTweet: null;
   quotedTweet: null;
   mentionedUsers: User[];
