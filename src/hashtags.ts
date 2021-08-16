@@ -1,5 +1,6 @@
 import * as HashtagVolumetryManager from 'managers/HashtagVolumetryManager';
 import * as ProcessorManager from 'managers/ProcessorManager';
+import * as TweetManager from 'managers/TweetManager';
 import * as UserManager from 'managers/UserManager';
 import * as logging from 'common/logging';
 
@@ -101,7 +102,12 @@ export default class HashtagPoller {
 
       // save users
       const users = scraper.getUsers();
+      const tweets = scraper.getTweets();
+
       await UserManager.batchUpsert(session)(users, Scraper.platformId);
+      console.time('insertion of tweets+++++++++++');
+      await TweetManager.batchUpsert(session)(tweets);
+      console.timeEnd('insertion of tweets+++++++++++');
 
       // const session = await mongoose.startSession();
 
