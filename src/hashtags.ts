@@ -1,5 +1,6 @@
 import * as HashtagVolumetryManager from 'managers/HashtagVolumetryManager';
 import * as ProcessorManager from 'managers/ProcessorManager';
+import * as TweetManager from 'managers/TweetManager';
 import * as UserManager from 'managers/UserManager';
 import * as logging from 'common/logging';
 
@@ -12,7 +13,6 @@ const WAIT_TIME = 1 * 1000; // 1s
 const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
 const MIN_PRIORITY = parseInt(process.env?.MIN_PRIORITY || '0', 10);
 const NEXT_PROCESS_IN_FUTURE = 60 * 60 * 1000;
-const logPrefix = '[hashtag]';
 
 // version to change when data retrieved is changed
 // this way we can display in the frontend a note saying that
@@ -25,17 +25,12 @@ type Properties<T> = { [K in keyof T]: T[K] };
 
 export default class HashtagPoller {
   private processorId: string;
-  private logger: typeof logging;
+  private logger: logging.Logger;
   private queueItemManager: QueueItemManager;
 
   constructor({ processorId }) {
     this.processorId = processorId;
-    this.logger = {
-      debug: (...args: any[]) => logging.debug(logPrefix, ...args),
-      info: (...args: any[]) => logging.info(logPrefix, ...args),
-      warn: (...args: any[]) => logging.warn(logPrefix, ...args),
-      error: (...args: any[]) => logging.error(logPrefix, ...args),
-    };
+    this.logger = logging.getLogger('[hashtag]');
     this.queueItemManager = new QueueItemManager({
       logger: this.logger,
       processorId,
@@ -107,7 +102,12 @@ export default class HashtagPoller {
 
       // save users
       const users = scraper.getUsers();
+      const tweets = scraper.getTweets();
+
       await UserManager.batchUpsert(session)(users, Scraper.platformId);
+      console.time('insertion of tweets+++++++++++');
+      await TweetManager.batchUpsert(session)(tweets);
+      console.timeEnd('insertion of tweets+++++++++++');
 
       // const session = await mongoose.startSession();
 

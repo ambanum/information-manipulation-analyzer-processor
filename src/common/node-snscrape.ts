@@ -5,7 +5,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import rimraf from 'rimraf';
-import { sanitizeHashtag } from 'utils/sanitizer';
+import uniq from 'lodash/fp/uniq';
 
 interface User {
   username: string;
@@ -31,30 +31,55 @@ interface User {
   url: string;
 }
 
-interface Tweet {
+export interface TweetPlace {
+  fullName: string;
+  name: string;
+  type: string;
+  country: string;
+  countryCode: string;
+}
+
+export interface Media {
+  _type: string;
+  thumbnailUrl?: string;
+  variants?: {
+    _type: string;
+    contentType: string;
+    url: string;
+    bitrate: number | null;
+  }[];
+  duration?: number;
+  views?: number;
+
+  previewUrl?: string;
+  fullUrl?: string;
+}
+export interface Tweet {
   url: string;
   date: string;
   content: string;
   renderedContent: string;
   id: string;
   user: User;
-  outlinks: any[];
-  tcooutlinks: any[];
-  replyCount: number;
-  retweetCount: number;
-  likeCount: number;
-  quoteCount: number;
-  conversationId: number;
-  lang: string;
-  source: string;
-  sourceUrl: string;
-  sourceLabel: string;
-  media: null;
-  retweetedTweet: null;
-  quotedTweet: null;
+  outlinks: string[] | null;
+  tcooutlinks: string[] | null;
+  replyCount: number | null;
+  retweetCount: number | null;
+  likeCount: number | null;
+  quoteCount: number | null;
+  conversationId: number | null;
+  lang: string | null;
+  source: string | null;
+  sourceUrl: string | null;
+  sourceLabel: string | null;
+  media: null | Media[];
+  retweetedTweet: Tweet | null;
   mentionedUsers: User[];
-  coordinates?: string;
-  place?: string;
+  coordinates?: { latitude: string; longitude: string } | null;
+  inReplyToTweetId: string | null;
+  quotedTweet: Tweet | null;
+  place: TweetPlace;
+  inReplyToUser: User;
   hashtags?: string[];
 }
 
@@ -81,7 +106,7 @@ export interface SnscrapeOptions {
   resumeUntilTweetId?: string;
   nbTweetsToScrapeFirstTime?: number;
   nbTweetsToScrape?: number;
-  logger?: typeof logging;
+  logger?: logging.Logger;
 }
 
 const NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT = 1000;
@@ -98,7 +123,7 @@ export default class Snscrape {
   private nbTweetsToScrape?: number;
   private filter?: string;
   private dir: string;
-  private logger: typeof logging;
+  private logger: logging.Logger;
   static platformId = 'twitter';
 
   static getVersion = () => {
@@ -118,7 +143,7 @@ export default class Snscrape {
       logger,
     }: SnscrapeOptions = {}
   ) {
-    this.logger = logger || logging;
+    this.logger = logger || logging.getLogger();
     this.hashtag = hashtag;
     this.dir = path.join(os.tmpdir(), 'information-manipulation-analyzer', hashtag);
 
@@ -200,29 +225,15 @@ export default class Snscrape {
       }
 
       const associatedHashtags = acc[date]?.associatedHashtags || {};
-      tweet.content
-        .split(/[\s\n\r]/gim)
-        .filter((v) => v.startsWith('#') && v !== '#')
-        .forEach((hashtag) => {
-          const sanitizedHashtag = sanitizeHashtag(hashtag);
-          if (this.hashtag === sanitizedHashtag) {
-            return;
-          }
-          if (!sanitizedHashtag) {
-            this.logger.error(
-              `Hashtag "${hashtag}" has been sanitized to an empty string -> skipping ${tweet.content}`
-            );
-            return;
-          }
 
-          const existingNumber =
-            associatedHashtags[sanitizedHashtag] &&
-            typeof associatedHashtags[sanitizedHashtag] === 'number'
-              ? associatedHashtags[sanitizedHashtag]
-              : 0;
+      (tweet.hashtags || []).forEach((tweetHashtag) => {
+        const existingNumber =
+          associatedHashtags[tweetHashtag] && typeof associatedHashtags[tweetHashtag] === 'number'
+            ? associatedHashtags[tweetHashtag]
+            : 0;
 
-          associatedHashtags[sanitizedHashtag] = existingNumber + 1;
-        });
+        associatedHashtags[tweetHashtag] = existingNumber + 1;
+      });
 
       return {
         ...acc,

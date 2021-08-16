@@ -34,6 +34,7 @@ const processorMetadata = {
   MONGODB_URI: process.env.MONGODB_URI,
   DEBUG: process.env.DEBUG,
 };
+
 (async () => {
   logging.info(`Launching processor in version ${version}`);
   logging.info(processorMetadata);
