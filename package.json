@@ -1,6 +1,6 @@
 {
   "name": "information-manipulation-analyzer-processor",
-  "version": "1.4.4",
+  "version": "1.5.0",
   "main": "src/index.ts",
   "author": "Martin Ratinaud <martinratinaud@gmail.com>",
   "license": "MIT",
