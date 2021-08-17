@@ -1,6 +1,6 @@
-import { Document, Model, Schema, model } from 'mongoose';
+import { Document, Model, Schema, model, models } from 'mongoose';
 
-export enum HashtagStatuses {
+export enum SearchStatuses {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
   DONE_FIRST_FETCH = 'DONE_FIRST_FETCH',
@@ -10,9 +10,17 @@ export enum HashtagStatuses {
   DONE_ERROR = 'DONE_ERROR',
 }
 
-export interface Hashtag extends Document {
+export enum SearchTypes {
+  KEYWORD = 'KEYWORD',
+  HASHTAG = 'HASHTAG',
+  MENTION = 'MENTION',
+  URL = 'URL',
+  CASHTAG = 'CASHTAG',
+}
+
+export interface Search extends Document {
   name: string;
-  status: HashtagStatuses;
+  status: SearchStatuses;
   metadata?: {
     lastEvaluatedUntilTweetId?: string;
   };
@@ -22,7 +30,7 @@ export interface Hashtag extends Document {
   error?: string;
 }
 
-const HashtagSchema = new Schema(
+const schema = new Schema(
   {
     name: {
       type: String,
@@ -33,7 +41,7 @@ const HashtagSchema = new Schema(
       type: String,
       required: true,
       index: true,
-      enum: Object.values(HashtagStatuses),
+      enum: Object.values(SearchStatuses),
     },
     metadata: {
       lastEvaluatedUntilTweetId: {
@@ -68,6 +76,6 @@ const HashtagSchema = new Schema(
   }
 );
 
-const HashtagModel: Model<Hashtag> = model('Hashtag', HashtagSchema);
+const SearchModel: Model<Search> = models.Search || model('Search', schema);
 
-export default HashtagModel;
+export default SearchModel;

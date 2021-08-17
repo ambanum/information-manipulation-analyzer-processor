@@ -58,6 +58,8 @@ const UserSchema = new Schema(
     botScoreProvider: { type: String, index: true },
     botScoreUpdatedAt: { type: Date, index: true },
     botScoreMetadata: { type: Schema.Types.Mixed },
+    // links to be able to easily get all users concerned by a search
+    searches: [{ type: Schema.Types.ObjectId, index: true }],
   },
   {
     strict: 'throw',

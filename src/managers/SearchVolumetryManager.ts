@@ -1,7 +1,7 @@
 import * as logging from 'common/logging';
 
 import { ClientSession } from 'mongoose';
-import HashtagVolumetryModel from 'models/HashtagVolumetry';
+import SearchVolumetryModel from 'models/SearchVolumetry';
 
 export interface Volumetry {
   [key: string]: {
@@ -16,7 +16,7 @@ export interface Volumetry {
 }
 
 export const batchUpsert = (session: ClientSession) => async (
-  hashtag: string,
+  search: string,
   volumetry: Volumetry,
   platformId: string
 ) => {
@@ -50,7 +50,7 @@ export const batchUpsert = (session: ClientSession) => async (
     );
     return {
       updateOne: {
-        filter: { date, platformId, hashtag },
+        filter: { date, platformId, search },
         update: {
           $inc: {
             nbTweets: tweets,
@@ -69,7 +69,7 @@ export const batchUpsert = (session: ClientSession) => async (
   });
 
   try {
-    await HashtagVolumetryModel.bulkWrite(bulkQueries);
+    await SearchVolumetryModel.bulkWrite(bulkQueries);
   } catch (e) {
     logging.error(e);
     logging.error(JSON.stringify(volumetry, null, 2));

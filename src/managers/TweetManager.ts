@@ -4,7 +4,9 @@ import TweetModel, { Tweet, TweetMedia } from 'models/Tweet';
 
 import { ClientSession } from 'mongoose';
 import { Tweet as SnscrapeTweet } from 'common/node-snscrape';
+import mongoose from 'mongoose';
 import omit from 'lodash/fp/omit';
+import uniq from 'lodash/fp/uniq';
 
 export const formatTweet = (scrapedTweet: SnscrapeTweet): Tweet => {
   const tweet: Tweet = omit([
@@ -38,6 +40,9 @@ export const formatTweet = (scrapedTweet: SnscrapeTweet): Tweet => {
       }
     : null;
   tweet.place = scrapedTweet.place ? omit(['_type'])(scrapedTweet.place) : null;
+  tweet.cashtags = scrapedTweet.cashtags
+    ? uniq(scrapedTweet.cashtags.map((cashtag) => cashtag.toLowerCase()))
+    : null;
   tweet.media = tweet.media
     ? scrapedTweet.media.map((media) => {
         const filteredMedia: TweetMedia = omit([
@@ -55,18 +60,27 @@ export const formatTweet = (scrapedTweet: SnscrapeTweet): Tweet => {
         return filteredMedia;
       })
     : null;
+
+  // additional fields
+  tweet.hour = `${scrapedTweet.date.replace(/\d\d:\d\d\+(.*)/, '00:00+$1')}`;
   return tweet;
 };
 
 export const batchUpsert = (session: ClientSession = undefined) => async (
-  tweets: SnscrapeTweet[]
+  tweets: SnscrapeTweet[],
+  searchId: string
 ) => {
   const bulkQueries = tweets.map((tweet) => {
     return {
       updateOne: {
         filter: { id: tweet.id },
         update: {
-          ...formatTweet(tweet),
+          $set: {
+            ...formatTweet(tweet),
+          },
+          $addToSet: {
+            searches: searchId,
+          },
         },
         upsert: true,
         session,
@@ -78,7 +92,8 @@ export const batchUpsert = (session: ClientSession = undefined) => async (
     await TweetModel.bulkWrite(bulkQueries);
   } catch (e) {
     logging.error(e);
-    logging.error(JSON.stringify(tweets, null, 2));
+    // logging.error(JSON.stringify(tweets, null, 2));
+    process.exit();
     throw e;
   }
 };

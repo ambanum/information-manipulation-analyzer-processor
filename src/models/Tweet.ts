@@ -1,9 +1,10 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import { Document, Model, Schema, model, models } from 'mongoose';
 
 import { User } from './User';
 
 export interface BasicTweet extends Document {
   date: string;
+  hour: string;
   content: string;
   id: string;
   username: string;
@@ -18,9 +19,9 @@ export interface BasicTweet extends Document {
   outlinks: string[] | null;
   media: TweetMedia[] | null;
   retweetedTweetId: string | null;
-  retweetedTweet?: Tweet;
+  retweetedTweet?: any;
   quotedTweetId: string | null;
-  quotedTweet?: Tweet;
+  quotedTweet?: any;
   inReplyToTweetId: string | null;
   inReplyToUsername: string | null;
   inReplyToUser?: User;
@@ -59,7 +60,7 @@ export interface TweetMedia {
 
 export type Tweet = BasicTweet;
 
-const PointSchema = new mongoose.Schema({
+const PointSchema = new Schema({
   type: {
     type: String,
     enum: ['Point'],
@@ -88,11 +89,14 @@ const PlaceSchema = new Schema({
   countryCode: { type: String, index: true },
 });
 
-const TweetSchema = new Schema(
+const schema = new Schema(
   {
     id: { type: String, required: true, index: true, unique: true },
     date: { type: Date, required: true, index: true },
-    content: { type: String, required: true, index: true },
+    hour: { type: Date, required: true, index: true },
+    // NOTE: we do not index `content` on purpose
+    // it would be too costy in case text is too long or contains unicode characters
+    content: { type: String, required: true },
     username: { type: String, required: true, index: true },
     replyCount: { type: Number, required: true, index: true },
     retweetCount: { type: Number, required: true, index: true },
@@ -112,6 +116,7 @@ const TweetSchema = new Schema(
     place: { type: PlaceSchema, index: true },
     hashtags: [{ type: String, index: true }],
     cashtags: [{ type: String, index: true }],
+    searches: [{ type: Schema.Types.ObjectId, index: true }],
   },
   {
     toObject: { virtuals: true },
@@ -120,36 +125,38 @@ const TweetSchema = new Schema(
   }
 );
 
-TweetSchema.virtual('user', {
+schema.virtual('user', {
   ref: 'User',
   localField: 'username',
   foreignField: 'username',
   justOne: true,
 });
-TweetSchema.virtual('inReplyUser', {
+schema.virtual('inReplyUser', {
   ref: 'User',
   localField: 'inReplyUser',
   foreignField: 'username',
   justOne: true,
 });
 
-TweetSchema.virtual('retweetedTweet', {
+schema.virtual('retweetedTweet', {
   ref: 'Tweet',
   localField: 'retweetedTweetId',
   foreignField: 'id',
   justOne: true,
 });
-TweetSchema.virtual('quotedTweet', {
+schema.virtual('quotedTweet', {
   ref: 'Tweet',
   localField: 'quotedTweetId',
   foreignField: 'id',
   justOne: true,
 });
-TweetSchema.virtual('inReplyToTweet', {
+schema.virtual('inReplyToTweet', {
   ref: 'Tweet',
   localField: 'inReplyToTweet',
   foreignField: 'id',
   justOne: true,
 });
 
-export default mongoose?.models?.Tweet || mongoose.model('Tweet', TweetSchema);
+const TweetModel: Model<Tweet> = models.Tweet || model('Tweet', schema);
+
+export default TweetModel;

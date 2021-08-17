@@ -25,6 +25,7 @@ const scrapedFieldsUsed = [
 
 export const batchUpsert = (session: ClientSession = undefined) => async (
   users: any[],
+  searchId: string,
   platformId: string
 ) => {
   const bulkQueries = users.map((user) => {
@@ -32,8 +33,13 @@ export const batchUpsert = (session: ClientSession = undefined) => async (
       updateOne: {
         filter: { id: user.id, platformId },
         update: {
-          ...pick(scrapedFieldsUsed)(user),
-          platformId,
+          $set: {
+            ...pick(scrapedFieldsUsed)(user),
+            platformId,
+          },
+          $addToSet: {
+            searches: searchId,
+          },
         },
         upsert: true,
         session,
@@ -57,7 +63,9 @@ export const getOutdatedScoreBotUsers = async (
   date.setDate(date.getDate() - 10);
   return UserModel.find({
     $or: [{ botScoreUpdatedAt: { $lte: date } }, { botScoreUpdatedAt: { $exists: false } }],
-  }).limit(limit);
+  })
+    .select('-searches')
+    .limit(limit);
 };
 
 export const get = async ({ username }: { username: string }) => {
