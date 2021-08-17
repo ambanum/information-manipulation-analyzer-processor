@@ -5,7 +5,6 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import rimraf from 'rimraf';
-import uniq from 'lodash/fp/uniq';
 
 interface User {
   username: string;
@@ -80,7 +79,8 @@ export interface Tweet {
   quotedTweet: Tweet | null;
   place: TweetPlace;
   inReplyToUser: User;
-  hashtags?: string[];
+  hashtags: string[] | null;
+  cashtags: string[] | null;
 }
 
 export interface Volumetry {
@@ -115,7 +115,7 @@ const SNSCRAPE_PATH = process.env.SNSCRAPE_PATH || 'snscrape';
 
 export default class Snscrape {
   private tweets: Tweet[];
-  private hashtag: string;
+  private search: string;
   private originalFilePath: string;
   private formattedFilePath: string;
   private firstProcessedTweet?: Tweet;
@@ -134,7 +134,7 @@ export default class Snscrape {
   };
 
   constructor(
-    hashtag: string,
+    search: string,
     {
       resumeUntilTweetId,
       resumeSinceTweetId,
@@ -144,8 +144,13 @@ export default class Snscrape {
     }: SnscrapeOptions = {}
   ) {
     this.logger = logger || logging.getLogger();
-    this.hashtag = hashtag;
-    this.dir = path.join(os.tmpdir(), 'information-manipulation-analyzer', hashtag);
+    this.search = search;
+
+    this.dir = path.join(
+      os.tmpdir(),
+      'information-manipulation-analyzer',
+      search.replace(/[/\\?%*:$|"<>]/g, '-') // replace invalid characters for a folder
+    );
 
     this.filter = resumeUntilTweetId
       ? `max_id:${resumeUntilTweetId}`
@@ -155,7 +160,7 @@ export default class Snscrape {
 
     this.nbTweetsToScrape = !this.filter ? nbTweetsToScrapeFirstTime : nbTweetsToScrape;
 
-    this.logger.info(`Using Snscrape to search ${this.nbTweetsToScrape} ${hashtag} ${this.filter}`);
+    this.logger.info(`Using Snscrape to search ${this.nbTweetsToScrape} ${search} ${this.filter}`);
     this.logger.debug(`in dir ${this.dir}`);
     fs.mkdirSync(this.dir, { recursive: true });
     this.originalFilePath = `${this.dir}/original.json`;
@@ -172,9 +177,9 @@ export default class Snscrape {
       this.logger.debug(`Download tweets to ${this.formattedFilePath} ${this.filter}`);
       const cmd = `${SNSCRAPE_PATH} --with-entity --max-results ${
         this.nbTweetsToScrape
-      } --jsonl twitter-hashtag "${this.hashtag}${this.filter ? ` ${this.filter}` : ''}" > ${
-        this.originalFilePath
-      }`;
+      } --jsonl twitter-search "+${this.search.replace('$', '\\$')}${
+        this.filter ? ` ${this.filter}` : ''
+      }" > ${this.originalFilePath}`;
       execCmd(cmd);
       try {
         // id are number that are tool big to be parsed by jq so change them in string
@@ -209,7 +214,7 @@ export default class Snscrape {
 
   public getVolumetry = () => {
     this.logger.info(
-      `Formatting ${this.tweets.length} into volumetry for #${this.hashtag} ${this.filter}`
+      `Formatting ${this.tweets.length} into volumetry for ${this.search} ${this.filter}`
     );
 
     // FIXME PERF REDUCE
@@ -259,20 +264,20 @@ export default class Snscrape {
 
   public getLastProcessedTweet = () => {
     this.logger.debug(
-      `Get Last Processed tweet for ${this.hashtag} ${this.lastProcessedTweet?.date}`
+      `Get Last Processed tweet for ${this.search} ${this.lastProcessedTweet?.date}`
     );
     return this.lastProcessedTweet;
   };
 
   public getFirstProcessedTweet = () => {
     this.logger.debug(
-      `Get First Processed tweet for ${this.hashtag} ${this.firstProcessedTweet?.date}`
+      `Get First Processed tweet for ${this.search} ${this.firstProcessedTweet?.date}`
     );
     return this.firstProcessedTweet;
   };
 
   public getUsers = (): User[] => {
-    this.logger.debug(`Get users from tweets for ${this.hashtag}`);
+    this.logger.debug(`Get users from tweets for ${this.search}`);
     const uniqueUsers = {};
     this.tweets.forEach((tweet) => (uniqueUsers[tweet.user.id] = tweet.user));
     return Object.values(uniqueUsers);

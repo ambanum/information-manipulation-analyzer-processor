@@ -13,13 +13,13 @@
     "decrypt": "grep -rl \"ANSIBLE\" ./ops/roles/*/github-clone/vars/* | xargs ansible-vault decrypt",
     "prepare": "husky install",
     "start:user": "NODE_PATH=build NODE_OPTIONS='--max_old_space_size=8192' node build/index.js user",
-    "start:hashtag": "NODE_PATH=build NODE_OPTIONS='--max_old_space_size=8192' node build/index.js hashtag",
+    "start:search": "NODE_PATH=build NODE_OPTIONS='--max_old_space_size=8192' node build/index.js search",
     "start:server": "NODE_PATH=build NODE_OPTIONS='--max_old_space_size=8192' node build/index.js server",
-    "start": "concurrently -r --kill-others --names \"hashtag,server,user\" \"yarn start:hashtag\" \"yarn start:server\" \"yarn start:user\"",
+    "start": "concurrently -r --kill-others --names \"search,server,user\" \"yarn start:search\" \"yarn start:server\" \"yarn start:user\"",
     "dev:user": "node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts user",
-    "dev:hashtag": "node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts hashtag",
+    "dev:search": "node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts search",
     "dev:server": "node --trace-warnings -r ts-node/register -r tsconfig-paths/register ./src/index.ts server",
-    "dev": "concurrently  --kill-others --names \"hashtag,server,user\" \"yarn dev:hashtag\" \"yarn dev:server\" \"yarn dev:user\"",
+    "dev": "concurrently  --kill-others --names \"search,server,user\" \"yarn dev:search\" \"yarn dev:server\" \"yarn dev:user\"",
     "deploy:vagrant:preproduction": "ansible-playbook ops/site.yml -i ops/inventories/dev.yml -e \"ENV=preproduction\" -vvv",
     "deploy:vagrant:production": "ansible-playbook ops/site.yml -i ops/inventories/dev.yml -e \"ENV=production\" -vvv",
     "deploy:tflmi:preproduction": "ansible-playbook ops/site.yml -i ops/inventories/production.yml -e \"ENV=tflmi-preproduction\" -vvv",
@@ -34,7 +34,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "@types/axios": "^0.14.0",
     "axios": "^0.21.1",
     "concurrently": "^6.2.0",
     "debug": "^4.3.1",
@@ -47,6 +46,7 @@
     "typescript": "^4.2.3"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.0",
     "@types/express": "^4.17.12",
     "@types/jest": "^26.0.22",
     "@types/mongoose": "^5.10.4",
