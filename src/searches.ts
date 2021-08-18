@@ -11,6 +11,7 @@ import Scraper from 'common/node-snscrape';
 
 const WAIT_TIME = 1 * 1000; // 1s
 const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
+const NB_TWEETS_TO_SCRAPE_FIRST_TIME = process.env?.NB_TWEETS_TO_SCRAPE_FIRST_TIME;
 const MIN_PRIORITY = parseInt(process.env?.MIN_PRIORITY || '0', 10);
 const NEXT_PROCESS_IN_FUTURE = 60 * 60 * 1000;
 
@@ -67,6 +68,9 @@ export default class SearchPoller {
           resumeUntilTweetId: lastEvaluatedUntilTweetId,
           resumeSinceTweetId: lastEvaluatedSinceTweetId,
           nbTweetsToScrape: NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : undefined,
+          nbTweetsToScrapeFirstTime: NB_TWEETS_TO_SCRAPE_FIRST_TIME
+            ? +NB_TWEETS_TO_SCRAPE_FIRST_TIME
+            : undefined,
           logger: this.logger,
         });
         return scraper;
