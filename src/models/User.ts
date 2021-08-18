@@ -29,13 +29,16 @@ export interface BasicUser extends Document {
   // bot score
   botScore?: number;
   botScoreProvider?: string;
-  botScoreUpdatedAt?: string;
+  botScoreUpdatedAt?: string | Date;
   botScoreMetadata?: any;
+
+  // links to be able to easily get all users concerned by a search
+  searches: string[];
 }
 
 export type User = BasicUser & UserBotScore;
 
-const UserSchema = new Schema(
+const UserSchema = new Schema<User>(
   {
     id: { type: String, required: true, index: true },
     platformId: { type: String, required: true, index: true },

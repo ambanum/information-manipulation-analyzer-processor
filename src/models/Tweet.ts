@@ -30,6 +30,8 @@ export interface BasicTweet extends Document {
   place: TweetPlace | null;
   hashtags: string[] | null;
   cashtags: string[] | null;
+  // links to be able to easily get all users concerned by a search
+  searches: string[];
 }
 
 export interface TweetCoordinates {
@@ -89,7 +91,7 @@ const PlaceSchema = new Schema({
   countryCode: { type: String, index: true },
 });
 
-const schema = new Schema(
+const schema = new Schema<Tweet>(
   {
     id: { type: String, required: true, index: true, unique: true },
     date: { type: Date, required: true, index: true },

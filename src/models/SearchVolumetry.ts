@@ -15,7 +15,7 @@ export interface SearchVolumetry extends Document {
   search?: Search;
 }
 
-const schema = new Schema(
+const schema = new Schema<SearchVolumetry>(
   {
     date: { type: Date, required: true, index: true },
     nbTweets: { type: Number, required: true, index: true },

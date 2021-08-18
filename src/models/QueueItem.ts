@@ -28,7 +28,7 @@ export interface QueueItem extends Document {
   };
 }
 
-const schema = new Schema(
+const schema = new Schema<QueueItem>(
   {
     action: {
       type: String,

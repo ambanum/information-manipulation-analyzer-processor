@@ -30,7 +30,7 @@ export interface Search extends Document {
   error?: string;
 }
 
-const schema = new Schema(
+const schema = new Schema<Search>(
   {
     name: {
       type: String,
