@@ -149,7 +149,7 @@ export default class Snscrape {
     this.dir = path.join(
       os.tmpdir(),
       'information-manipulation-analyzer',
-      search.replace(/[/\\?%*:$|"<>]/g, '-') // replace invalid characters for a folder
+      search.replace(/[/\\?&%*:$|"<>]/g, '-') // replace invalid characters for a folder
     );
 
     this.filter = resumeUntilTweetId
