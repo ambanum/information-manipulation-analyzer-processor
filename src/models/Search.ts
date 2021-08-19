@@ -1,5 +1,7 @@
 import { Document, Model, Schema, model, models } from 'mongoose';
 
+import { UrlScraperResponse } from 'url-scraper';
+
 export enum SearchStatuses {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
@@ -23,7 +25,9 @@ export interface Search extends Document {
   status: SearchStatuses;
   metadata?: {
     lastEvaluatedUntilTweetId?: string;
+    url?: UrlScraperResponse;
   };
+  type: SearchTypes;
   firstOccurenceDate?: string | Date;
   oldestProcessedDate?: string | Date;
   newestProcessedDate?: string | Date;
@@ -32,43 +36,17 @@ export interface Search extends Document {
 
 const schema = new Schema<Search>(
   {
-    name: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    status: {
-      type: String,
-      required: true,
-      index: true,
-      enum: Object.values(SearchStatuses),
-    },
+    name: { type: String, required: true, index: true },
+    status: { type: String, required: true, index: true, enum: Object.values(SearchStatuses) },
     metadata: {
-      lastEvaluatedUntilTweetId: {
-        type: String,
-        index: true,
-      },
+      lastEvaluatedUntilTweetId: { type: String, index: true },
+      url: { type: Schema.Types.Mixed },
     },
-    firstOccurenceDate: {
-      type: Date,
-      index: true,
-    },
-    oldestProcessedDate: {
-      type: Date,
-      index: true,
-    },
-    newestProcessedDate: {
-      type: Date,
-      index: true,
-    },
-    error: {
-      type: String,
-      index: true,
-    },
-    scrapeVersion: {
-      type: Number,
-      index: true,
-    },
+    firstOccurenceDate: { type: Date, index: true },
+    oldestProcessedDate: { type: Date, index: true },
+    newestProcessedDate: { type: Date, index: true },
+    error: { type: String, index: true },
+    scrapeVersion: { type: Number, index: true },
   },
   {
     strict: 'throw',

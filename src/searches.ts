@@ -8,6 +8,7 @@ import { QueueItemActionTypes, QueueItemStatuses, SearchStatuses } from 'interfa
 
 import QueueItemManager from 'managers/QueueItemManager';
 import Scraper from 'common/node-snscrape';
+import { getUrlData } from 'url-scraper';
 
 const WAIT_TIME = 1 * 1000; // 1s
 const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
@@ -92,6 +93,16 @@ export default class SearchPoller {
         previous: isRequestForPreviousData,
         next: isRequestForNewData,
       });
+
+      if (item.search.get('type') === 'URL' && !item.search?.metadata?.url?.scrapedAt) {
+        const data = await getUrlData(item.search.name);
+
+        item.search.set('metadata', {
+          ...item.search.metadata,
+          url: data,
+        });
+        await item.search.save();
+      }
 
       await ProcessorManager.update(this.processorId, { lastProcessedAt: new Date() });
 
