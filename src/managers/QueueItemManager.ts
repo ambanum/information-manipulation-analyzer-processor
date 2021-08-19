@@ -2,19 +2,19 @@ import * as logging from 'common/logging';
 
 import { ClientSession, FilterQuery } from 'mongoose';
 import {
-  Hashtag,
-  HashtagStatuses,
   QueueItem,
   QueueItemActionTypes,
   QueueItemStatuses,
+  Search,
+  SearchStatuses,
 } from '../interfaces';
 
-import HashtagModel from '../models/Hashtag';
 import QueueItemModel from '../models/QueueItem';
+import SearchModel from '../models/Search';
 
 interface QueueItemManagerProps {
   processorId: string;
-  logger: typeof logging;
+  logger: logging.Logger;
   session?: ClientSession;
   scrapeVersion: number;
 }
@@ -31,7 +31,7 @@ export default class QueueItemManager {
     MEDIUM: 3,
   };
   constructor({ processorId, logger, session, scrapeVersion }: QueueItemManagerProps) {
-    this.logger = logger || logging;
+    this.logger = logger || logging.getLogger();
     this.processorId = processorId;
     this.session = session;
     this.scrapeVersion = scrapeVersion;
@@ -60,8 +60,8 @@ export default class QueueItemManager {
     }
   };
 
-  createHashtag = async (
-    hashtag: string,
+  createSearch = async (
+    search: string,
     {
       lastEvaluatedUntilTweetId,
       lastEvaluatedSinceTweetId,
@@ -79,10 +79,10 @@ export default class QueueItemManager {
         [
           {
             priority,
-            action: QueueItemActionTypes.HASHTAG,
+            action: QueueItemActionTypes.SEARCH,
             status: QueueItemStatuses.PENDING,
             processingDate,
-            hashtag,
+            search,
             ...(lastEvaluatedUntilTweetId
               ? {
                   metadata: {
@@ -109,12 +109,12 @@ export default class QueueItemManager {
     }
   };
 
-  getPendingHashtags = async (minPriority: number = QueueItemManager.PRIORITIES.NOW) => {
+  getPendingSearches = async (minPriority: number = QueueItemManager.PRIORITIES.NOW) => {
     this.logger.debug(`get PENDING items`);
     try {
       const query: FilterQuery<QueueItem> = {
         status: QueueItemStatuses.PENDING,
-        action: QueueItemActionTypes.HASHTAG,
+        action: QueueItemActionTypes.SEARCH,
         processingDate: { $lte: new Date() },
         priority: { $gte: minPriority },
       };
@@ -130,7 +130,7 @@ export default class QueueItemManager {
           setDefaultsOnInsert: true,
           sort: { priority: 1, _id: -1 },
         }
-      ).populate('hashtag');
+      ).populate('search');
 
       return {
         item,
@@ -142,7 +142,7 @@ export default class QueueItemManager {
     }
   };
 
-  startProcessingHashtag = async (
+  startProcessingSearch = async (
     item: QueueItem,
     { previous, next }: { previous?: boolean; next?: boolean }
   ) => {
@@ -154,18 +154,18 @@ export default class QueueItemManager {
         { _id: item._id },
         { $set: { status: QueueItemStatuses.PROCESSING, processorId: this.processorId } }
       );
-      await HashtagModel.updateOne(
-        { _id: item.hashtag },
+      await SearchModel.updateOne(
+        { _id: item.search },
         {
           $set: {
             scrapeVersion: this.scrapeVersion,
             status:
-              HashtagStatuses[
+              SearchStatuses[
                 previous
-                  ? HashtagStatuses.PROCESSING_PREVIOUS
+                  ? SearchStatuses.PROCESSING_PREVIOUS
                   : next
-                  ? HashtagStatuses.PROCESSING_NEW
-                  : HashtagStatuses.PROCESSING
+                  ? SearchStatuses.PROCESSING_NEW
+                  : SearchStatuses.PROCESSING
               ],
           },
         }
@@ -178,10 +178,10 @@ export default class QueueItemManager {
     }
   };
 
-  stopProcessingHashtag = async (
+  stopProcessingSearch = async (
     item: QueueItem,
     itemData: Partial<QueueItem>,
-    hashtagData: Partial<Hashtag>
+    searchData: Partial<Search>
   ) => {
     this.logger.debug(
       `Stop processing for queueItem ${item._id} and processor ${this.processorId}`
@@ -199,9 +199,9 @@ export default class QueueItemManager {
         this.session ? { session: this.session } : {}
       );
 
-      await HashtagModel.updateOne(
-        { _id: item.hashtag },
-        { $set: { status: HashtagStatuses.DONE, error: null, ...hashtagData } },
+      await SearchModel.updateOne(
+        { _id: item.search },
+        { $set: { status: SearchStatuses.DONE, error: null, ...searchData } },
         this.session ? { session: this.session } : {}
       );
     } catch (e) {
@@ -211,7 +211,7 @@ export default class QueueItemManager {
       );
     }
   };
-  stopProcessingHashtagWithError = async (item: QueueItem, hashtagData: Partial<Hashtag>) => {
+  stopProcessingSearchWithError = async (item: QueueItem, searchData: Partial<Search>) => {
     this.logger.debug(
       `Stop processing with error for queueItem ${item._id} and processor ${this.processorId}`
     );
@@ -222,15 +222,15 @@ export default class QueueItemManager {
           $set: {
             status: QueueItemStatuses.DONE_ERROR,
             processorId: this.processorId,
-            error: hashtagData.error,
+            error: searchData.error,
           },
         },
         this.session ? { session: this.session } : {}
       );
 
-      await HashtagModel.updateOne(
-        { _id: item.hashtag },
-        { $set: { status: HashtagStatuses.DONE_ERROR, ...hashtagData } },
+      await SearchModel.updateOne(
+        { _id: item.search },
+        { $set: { status: SearchStatuses.DONE_ERROR, ...searchData } },
         this.session ? { session: this.session } : {}
       );
 

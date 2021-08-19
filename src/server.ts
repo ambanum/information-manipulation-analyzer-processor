@@ -6,7 +6,7 @@ import express, { Express } from 'express';
 
 interface ServerProps {
   processorId: string;
-  logger: typeof logging;
+  logger: logging.Logger;
 }
 
 const SERVER_PORT = process.env.SERVER_PORT || 4000;
@@ -16,7 +16,7 @@ export default class Server {
   private app?: Express;
 
   constructor({ processorId, logger }: ServerProps) {
-    this.logger = logger || logging;
+    this.logger = logger || logging.getLogger();
     this.processorId = processorId;
     this.app = express();
   }

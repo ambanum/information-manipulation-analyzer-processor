@@ -13,6 +13,12 @@ Plan is to migrate Snscrape to the french sovereign bot whenever it will be read
 
 We are also using a [Bot detection library](https://github.com/ambanum/social-networks-bot-finder) created by AmbNum and that needs to be installed
 
+Main program launches concurrently **3** processes to keep some kind of separation of concern in case we want someday to extract some of them into different microservices
+
+- `src/hashtas.ts` will poll on every tick and retrieve volumetry for one hashtag at a time, beginning with the most recent
+- `src/users.ts` will poll on every tick an use the bot detection library to enhance user's data in the database
+- `src/server.ts` will expose a server that permits to execute the above services with API calls. (This server is not secured as it is only meant to be used locally through http://localhost:4000)
+
 ## Development
 
 **IMPORTANT** main branch is `main` but all PRs must be against `develop`, except for immediate patches
@@ -42,7 +48,7 @@ Install snscrape
 pip3 install git+https://github.com/JustAnotherArchivist/snscrape.git
 ```
 
-Install jq
+Install jq (for formatting json)
 
 ```
 brew install jq

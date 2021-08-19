@@ -1,5 +1,12 @@
 import debugLib from 'debug';
 
+export interface Logger {
+  debug: (...args: any[]) => any;
+  info: (...args: any[]) => any;
+  warn: (...args: any[]) => any;
+  error: (...args: any[]) => any;
+}
+
 const getTime = () => {
   const date = new Date();
   return `${date.getHours().toString().padStart(2, '0')}:${date
@@ -13,3 +20,13 @@ export const debug = (...args: any[]) => debugLib('ima:debug')(`[${getTime()}]`,
 export const info = (...args: any[]) => debugLib('ima: info')(`[${getTime()}]`, ...args);
 export const warn = (...args: any[]) => debugLib('ima: warn')(`[${getTime()}]`, ...args);
 export const error = (...args: any[]) => debugLib('ima:error')(`[${getTime()}]`, ...args);
+
+export const getLogger = (prefix?: string): Logger => {
+  const getArgs = (...args) => (!!prefix ? [prefix, ...args] : [...args]);
+  return {
+    debug: (...args: any[]) => debug(...getArgs(...args)),
+    info: (...args: any[]) => info(...getArgs(...args)),
+    warn: (...args: any[]) => warn(...getArgs(...args)),
+    error: (...args: any[]) => error(...getArgs(...args)),
+  };
+};

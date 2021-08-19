@@ -1,9 +1,9 @@
-import { Document, Model, Schema, model } from 'mongoose';
+import { Document, Model, Schema, model, models } from 'mongoose';
 
-import { Hashtag } from './Hashtag';
+import { Search } from './Search';
 
 export enum QueueItemActionTypes {
-  HASHTAG = 'HASHTAG',
+  SEARCH = 'SEARCH',
 }
 
 export enum QueueItemStatuses {
@@ -18,7 +18,7 @@ export interface QueueItem extends Document {
   priority: number;
   action: QueueItemActionTypes;
   status: QueueItemStatuses;
-  hashtag: Hashtag;
+  search: Search;
   processorId?: string;
   processingDate?: Date;
   metadata?: {
@@ -28,7 +28,7 @@ export interface QueueItem extends Document {
   };
 }
 
-const QueueItemSchema = new Schema(
+const schema = new Schema<QueueItem>(
   {
     action: {
       type: String,
@@ -64,7 +64,7 @@ const QueueItemSchema = new Schema(
       description:
         'field used to pass some filters or additional data to process data more finely (startDate, endDate, etc...)',
     },
-    hashtag: { type: Schema.Types.ObjectId, ref: 'Hashtag' },
+    search: { type: Schema.Types.ObjectId, ref: 'Search' },
     error: {
       type: String,
       index: true,
@@ -76,6 +76,6 @@ const QueueItemSchema = new Schema(
   }
 );
 
-const QueueItemModel: Model<QueueItem> = model('QueueItem', QueueItemSchema);
+const QueueItemModel: Model<QueueItem> = models.QueueItem || model('QueueItem', schema);
 
 export default QueueItemModel;

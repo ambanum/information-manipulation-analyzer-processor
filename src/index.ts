@@ -5,8 +5,8 @@ import * as logging from 'common/logging';
 
 import { getProvider, getVersion } from 'botscore';
 
-import HashtagPoller from './hashtags';
 import Scraper from 'common/node-snscrape';
+import SearchPoller from './searches';
 import Server from './server';
 import UserPoller from './users';
 import dbConnect from 'common/db';
@@ -15,10 +15,10 @@ import packageJson from '../package.json';
 
 const { version } = packageJson;
 
-const service: 'hashtag' | 'server' | 'user' | string = process.argv[2];
+const service: 'search' | 'server' | 'user' | string = process.argv[2];
 
-if (!['hashtag', 'server', 'user'].includes(service)) {
-  console.error("You need to specify a service 'hashtag' | 'server'");
+if (!['search', 'server', 'user'].includes(service)) {
+  console.error("You need to specify a service 'search' | 'server' | 'user'");
   process.exit();
 }
 
@@ -34,6 +34,7 @@ const processorMetadata = {
   MONGODB_URI: process.env.MONGODB_URI,
   DEBUG: process.env.DEBUG,
 };
+
 (async () => {
   logging.info(`Launching processor in version ${version}`);
   logging.info(processorMetadata);
@@ -58,10 +59,10 @@ const processorMetadata = {
         logging.info('No USER_BOT_SCORES started');
       }
     } else {
-      const hashtagPoller = new HashtagPoller({ processorId: PROCESSOR });
-      await hashtagPoller.init();
+      const searchPoller = new SearchPoller({ processorId: PROCESSOR });
+      await searchPoller.init();
 
-      await hashtagPoller.pollHashtags();
+      await searchPoller.pollSearches();
     }
   }
 })();

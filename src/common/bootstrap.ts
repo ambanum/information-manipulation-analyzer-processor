@@ -1,6 +1,9 @@
-require('dotenv').config({ path: `./.env.${process.env.NODE_ENV || 'local'}` });
-
 import * as logging from 'common/logging';
+
+import dotenv from 'dotenv';
+
+dotenv.config({ path: `./.env.${process.env.NODE_ENV || 'local'}` });
+dotenv.config({ path: `./.env` });
 
 process.on('unhandledRejection', (reason: any) => {
   logging.error(`unhandledRejection ${reason}`);

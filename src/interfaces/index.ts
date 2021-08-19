@@ -1,8 +1,8 @@
-import { Hashtag as ModelHashtag } from 'models/Hashtag';
 import { Processor as ModelProcessor } from 'models/Processor';
 import { QueueItem as ModelQueueItem } from 'models/QueueItem';
+import { Search as ModelSearch } from 'models/Search';
 
-export { HashtagStatuses } from 'models/Hashtag';
+export { SearchStatuses } from 'models/Search';
 export { QueueItemActionTypes, QueueItemStatuses } from 'models/QueueItem';
 
 /**
@@ -15,16 +15,16 @@ export interface CommonResponse {
 }
 
 /**
- * Hashtag
+ * Search
  */
 
-export type Hashtag = ModelHashtag;
+export type Search = ModelSearch;
 
-export interface GetHashtagsResponse extends CommonResponse {
-  hashtags: Hashtag[];
+export interface GetSearchesResponse extends CommonResponse {
+  searches: Search[];
 }
 
-export interface CreateHashtagInput extends CommonResponse {
+export interface CreateSearchInput extends CommonResponse {
   name: string;
 }
 

@@ -7,7 +7,7 @@ export interface Processor extends Document {
   metadata?: any;
 }
 
-const ProcessorSchema = new Schema(
+const ProcessorSchema = new Schema<Processor>(
   {
     _id: {
       type: String,

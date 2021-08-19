@@ -4,20 +4,14 @@ import * as logging from 'common/logging';
 
 import { getBotScores } from 'botscore';
 
-const logPrefix = '[user]';
 const DEFAULT_LIMIT = 2000;
 export default class UserPoller {
   private processorId: string;
-  private logger: typeof logging;
+  private logger: logging.Logger;
 
   constructor({ processorId }) {
     this.processorId = processorId;
-    this.logger = {
-      debug: (...args: any[]) => logging.debug(logPrefix, ...args),
-      info: (...args: any[]) => logging.info(logPrefix, ...args),
-      warn: (...args: any[]) => logging.warn(logPrefix, ...args),
-      error: (...args: any[]) => logging.error(logPrefix, ...args),
-    };
+    this.logger = logging.getLogger('[user]');
   }
 
   async pollUsers(limit = DEFAULT_LIMIT) {
