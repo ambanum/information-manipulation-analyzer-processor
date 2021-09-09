@@ -66,34 +66,32 @@ export const formatTweet = (scrapedTweet: SnscrapeTweet): Tweet => {
   return tweet;
 };
 
-export const batchUpsert = (session: ClientSession = undefined) => async (
-  tweets: SnscrapeTweet[],
-  searchId: string
-) => {
-  const bulkQueries = tweets.map((tweet) => {
-    return {
-      updateOne: {
-        filter: { id: tweet.id },
-        update: {
-          $set: {
-            ...formatTweet(tweet),
+export const batchUpsert =
+  (session: ClientSession = undefined) =>
+  async (tweets: SnscrapeTweet[], searchId: string) => {
+    const bulkQueries = tweets.map((tweet) => {
+      return {
+        updateOne: {
+          filter: { id: tweet.id },
+          update: {
+            $set: {
+              ...formatTweet(tweet),
+            },
+            $addToSet: {
+              searches: searchId,
+            },
           },
-          $addToSet: {
-            searches: searchId,
-          },
+          upsert: true,
+          session,
         },
-        upsert: true,
-        session,
-      },
-    };
-  });
+      };
+    });
 
-  try {
-    await TweetModel.bulkWrite(bulkQueries);
-  } catch (e) {
-    logging.error(e);
-    // logging.error(JSON.stringify(tweets, null, 2));
-    process.exit();
-    throw e;
-  }
-};
+    try {
+      await TweetModel.bulkWrite(bulkQueries);
+    } catch (e) {
+      logging.error(e);
+      logging.error(JSON.stringify(e.writeErrors, null, 2));
+      throw e;
+    }
+  };
