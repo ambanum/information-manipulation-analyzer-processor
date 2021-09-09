@@ -180,6 +180,7 @@ export default class Snscrape {
       } --jsonl twitter-search "+${this.search.replace('$', '\\$')}${
         this.filter ? ` ${this.filter}` : ''
       }" > ${this.originalFilePath}`;
+      this.logger.info(cmd);
       execCmd(cmd);
       try {
         // id are number that are tool big to be parsed by jq so change them in string

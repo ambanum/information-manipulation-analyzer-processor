@@ -107,7 +107,13 @@ const schema = new Schema<Tweet>(
     conversationId: { type: String, index: true },
     lang: { type: String, index: true },
     sourceUrl: { type: String, index: true },
-    outlinks: [{ type: String, index: true }],
+    outlinks: [
+      {
+        type: String,
+        index:
+          false /* Sometimes the links are too long and we do not need them to be searched on */,
+      },
+    ],
     media: [{ type: MediaSchema }],
     retweetedTweetId: { type: String, index: true },
     quotedTweetId: { type: String, index: true },
