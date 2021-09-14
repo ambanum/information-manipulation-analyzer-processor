@@ -15,7 +15,7 @@ jobs:
       - uses: rickstaa/action-contains-tag@v1
         id: contains_tag
         with:
-          reference: 'develop'
+          reference: 'main'
           tag: '${{ github.ref }}'
 
   deploy:
