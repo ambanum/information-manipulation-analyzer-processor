@@ -1,15 +1,16 @@
 name: Deploy
 on:
   push:
-    # branches: [develop]
+    branches: [develop]
     tags:
       - '*'
 jobs:
   deploy:
-    # if: github.event.ref == 'refs/heads/develop'
+    if: startsWith( github.ref, 'refs/tags/releases/')
     runs-on: ubuntu-latest
     steps:
       - run: echo 'ref is ${{ github.ref }}'
+      - run: echo 'event is ${{ github.event }}'
       # - run: echo 'action is ${{ github.action }}'
       - run: echo 'action_path is ${{ github.action_path }}'
       - run: echo 'actor is ${{ github.actor }}'
