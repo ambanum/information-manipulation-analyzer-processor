@@ -160,7 +160,9 @@ export default class Snscrape {
 
     this.nbTweetsToScrape = !this.filter ? nbTweetsToScrapeFirstTime : nbTweetsToScrape;
 
-    this.logger.info(`Using Snscrape to search ${this.nbTweetsToScrape} ${search} ${this.filter}`);
+    this.logger.info(
+      `Using Snscrape to search ${this.nbTweetsToScrape} "${search} ${this.filter}"`
+    );
     this.logger.debug(`in dir ${this.dir}`);
     fs.mkdirSync(this.dir, { recursive: true });
     this.originalFilePath = `${this.dir}/original.json`;
@@ -179,19 +181,20 @@ export default class Snscrape {
         this.nbTweetsToScrape
       } --jsonl twitter-search "+${this.search.replace('$', '\\$')}${
         this.filter ? ` ${this.filter}` : ''
-      }" > ${this.originalFilePath}`;
+      }" > "${this.originalFilePath}"`;
       this.logger.info(cmd);
       execCmd(cmd);
+
       try {
         // id are number that are tool big to be parsed by jq so change them in string
-        execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' ${this.originalFilePath}`);
+        execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
         // json format given by twint is weird and we need jq to recreate them
-        execCmd(`(jq -s . < ${this.originalFilePath}) > ${this.formattedFilePath}`);
+        execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
       } catch (e) {
         this.logger.error(e); // eslint-disable-line
 
         // TODO either end with error or fallback gently, depending on the error
-        execCmd(`echo "[]" > ${this.formattedFilePath}`);
+        execCmd(`echo "[]" > "${this.formattedFilePath}"`);
       }
     }
 
