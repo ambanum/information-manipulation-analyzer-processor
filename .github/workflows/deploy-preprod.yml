@@ -9,6 +9,7 @@ jobs:
     # if: github.event.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
+      - run: git branch | grep \* | cut -d ' ' -f2
       - run: echo 'ref is ${{ github.ref }}'
       - run: echo 'event is ${{ github.event }}'
       # - run: echo 'action is ${{ github.action }}'
