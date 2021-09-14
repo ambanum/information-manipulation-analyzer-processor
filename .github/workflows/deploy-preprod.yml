@@ -20,7 +20,7 @@ jobs:
 
   deploy:
     needs: on-branch-check
-    if: ${{ needs.on-branch-check.outputs.on_main == 'true' }}
+    if: ${{ needs.on-branch-check.outputs.on_branch == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - run: git branch | grep \* | cut -d ' ' -f2
