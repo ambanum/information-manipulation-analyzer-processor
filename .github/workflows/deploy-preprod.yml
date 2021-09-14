@@ -9,8 +9,14 @@ jobs:
     # if: github.event.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
-      - run: echo 'ref is ${{ github.event.ref }}'
-      - run: echo 'base_ref is ${{ github.event.base_ref }}'
+      - run: echo 'ref is ${{ github.ref }}'
+      # - run: echo 'action is ${{ github.action }}'
+      - run: echo 'action_path is ${{ github.action_path }}'
+      - run: echo 'actor is ${{ github.actor }}'
+      - run: echo 'base_ref is ${{ github.base_ref }}'
+      - run: echo 'event_name is ${{ github.event_name }}'
+      - run: echo 'event_path is ${{ github.event_path }}'
+      - run: echo 'head_ref is ${{ github.head_ref }}'
       # - uses: actions/checkout@v2
       #   with:
       #     fetch-depth: 0
