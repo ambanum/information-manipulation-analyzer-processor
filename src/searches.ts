@@ -165,6 +165,7 @@ export default class SearchPoller {
             priority: QueueItemManager.PRIORITIES.HIGH,
             processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
           });
+          newSearchData.newestProcessedDate = new Date();
         }
         await this.queueItemManager.stopProcessingSearch(item, {}, newSearchData);
       } else if (isRequestForNewData) {
@@ -196,6 +197,9 @@ export default class SearchPoller {
             {},
             {
               newestProcessedDate: new Date(),
+              ...(item.search.get('status') === SearchStatuses.PROCESSING_PREVIOUS
+                ? { status: SearchStatuses.PROCESSING_PREVIOUS }
+                : {}),
             }
           );
         }
