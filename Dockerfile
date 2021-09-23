@@ -18,6 +18,9 @@ RUN pip install numpy
 # install common useful libs for debugging
 RUN apt-get install -y nano git
 
+# install lib to prevent error "spawn ps ENOENT" when launching docker
+RUN apt-get install -y procps
+
 # install libs to use within the processor
 RUN apt-get install -y jq
 
