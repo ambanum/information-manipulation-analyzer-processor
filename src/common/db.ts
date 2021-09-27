@@ -21,7 +21,12 @@ const dbConnect = async () => {
     return Promise.resolve(cachedDb);
   }
 
-  const connection = await mongoose.connect(process.env.MONGODB_URI, {});
+  const connection = await mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
+  });
 
   cachedDb = connection;
   logging.info(`Connected to database ${process.env.MONGODB_URI.replace(/:.*@/, ':XXXXX@')}`);
