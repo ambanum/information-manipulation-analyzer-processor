@@ -352,7 +352,14 @@ export default class Snscrape {
   public getUsers = (): User[] => {
     this.logger.debug(`Get users from tweets for ${this.search}`);
     const uniqueUsers = {};
-    this.tweets.forEach((tweet) => (uniqueUsers[tweet.user.id] = tweet.user));
+    this.tweets.forEach((tweet) => {
+      if (!tweet?.user?.id) {
+        logging.error('This tweet has no user!!');
+        logging.error(tweet);
+      } else {
+        uniqueUsers[tweet.user.id] = tweet.user;
+      }
+    });
     return Object.values(uniqueUsers);
   };
 

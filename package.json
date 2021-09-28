@@ -17,7 +17,7 @@
     "start:retweets": "NODE_PATH=build NODE_OPTIONS='--max_old_space_size=8192' node build/index.js retweets",
     "start:server": "NODE_PATH=build NODE_OPTIONS='--max_old_space_size=8192' node build/index.js server",
     "start": "concurrently -r --kill-others --names \"search,server,user,retweets\" \"yarn start:search\" \"yarn start:server\" \"yarn start:user\" \"yarn start:retweets\"",
-    "dev:node": "node --trace-warnings --trace-exit --trace-sigint --trace-uncaught --trace-deprecation --trace-atomics-wait --trace-tls -r ts-node/register -r tsconfig-paths/register",
+    "dev:node": "node --trace-warnings --trace-exit --trace-sigint --trace-uncaught --trace-deprecation --trace-atomics-wait -r ts-node/register -r tsconfig-paths/register",
     "dev:user": "yarn dev:node ./src/index.ts user",
     "dev:search": "yarn dev:node ./src/index.ts search",
     "dev:retweets": "yarn dev:node ./src/index.ts retweets",
@@ -45,6 +45,7 @@
     "mongoose": "5.13.7",
     "open-graph-scraper": "4.9.2",
     "rimraf": "^3.0.2",
+    "sib-api-v3-typescript": "^2.2.2",
     "temp": "^0.9.4",
     "ts-node": "10.2.1",
     "typescript": "4.4.3"

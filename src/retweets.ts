@@ -4,6 +4,7 @@ import * as logging from 'common/logging';
 
 import { QueueItemActionTypes, QueueItemStatuses } from 'interfaces';
 
+import EmailNotifier from 'notifier/email';
 import QueueItemManager from 'managers/QueueItemManager';
 import Scraper from 'common/node-snscrape';
 
@@ -17,7 +18,61 @@ const NB_TWEETS_TO_SCRAPE_ANYWAY = NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : 
 // this way we can display in the frontend a note saying that
 // in order to have the full features, you need to relaunch the process
 const SCRAPE_VERSION = 1;
+const notifier = new EmailNotifier(process?.env?.SENDINBLUE_API_KEY);
 
+const sendAlertIfNeeded = async ({ name, before, after }) => {
+  if (!process?.env?.SENDINBLUE_API_KEY) {
+    logging.warn("Can't send email because SENDINBLUE_API_KEY is not configured");
+    return;
+  }
+  let supsiciousRiseMessage = '';
+  const frontendUrl = `${process.env.FRONT_URL}/searches/${encodeURIComponent(name)}`;
+
+  // Send alert if abnormal rise is detected
+  after.map(async (updatedDocument) => {
+    const initialData = before.find(
+      (originalDocument) => originalDocument.id === updatedDocument.id
+    );
+
+    const isOverAlertThreshold =
+      initialData.likeCount - updatedDocument.likeCount > 1000 ||
+      initialData.retweetCount - updatedDocument.retweetCount > 100 ||
+      initialData.quoteCount - updatedDocument.quoteCount > 100 ||
+      initialData.replyCount - updatedDocument.replyCount > 1000;
+
+    if (isOverAlertThreshold) {
+      supsiciousRiseMessage += `
+      <h2>A tweet from <strong>${updatedDocument.username}</strong> is pumping. <a href="https://www.twitter.com/${updatedDocument.username}/status/${updatedDocument.id}">Check it out</a></h2>
+
+      <div style="font-style:italic">${updatedDocument.content}</div>
+      <div style="font-style:italic;font-size:0.8em">Created: ${updatedDocument.date}</div>
+
+      <br/>
+      <br/>
+      <div>Likes    raised from <strong>${initialData.likeCount}</strong> to <strong>${updatedDocument.likeCount}</strong></div>
+      <div>RT       raised from <strong>${initialData.retweetCount}</strong> to <strong>${updatedDocument.retweetCount}</strong></div>
+      <div>Quotes   raised from <strong>${initialData.quoteCount}</strong> to <strong>${updatedDocument.quoteCount}</strong></div>
+      <div>Replies  raised from <strong>${initialData.replyCount}</strong> to <strong>${updatedDocument.replyCount}</strong></div>
+      <br/>
+      Check it out online <a href="${frontendUrl}">${frontendUrl}</a>
+      <br/>
+      <hr/>
+      <br/>
+      `;
+    }
+  });
+
+  if (supsiciousRiseMessage) {
+    await notifier.sendNotification({
+      to: ['martin.ratinaud@beta.gouv.fr'].map((email) => ({
+        email,
+      })),
+      sender: { email: 'ima@disinfo.gouv.fr' },
+      subject: `Suspicious rise on search "${name}"`,
+      htmlContent: supsiciousRiseMessage,
+    });
+  }
+};
 export default class RetweetsPoller {
   private processorId: string;
   private logger: logging.Logger;
@@ -84,7 +139,17 @@ export default class RetweetsPoller {
       scraper.downloadRetweets();
       const tweetsToUpdate = scraper.getRetweetUpdatedValues();
 
-      await TweetManager.batchUpsert(session)(tweetsToUpdate, item.search._id);
+      const updatedDocuments = await TweetManager.batchUpsertAndReturnDocument(session)(
+        tweetsToUpdate,
+        item.search._id
+      );
+      this.logger.info(`Updated ${updatedDocuments.length} tweets for `);
+
+      await sendAlertIfNeeded({
+        name: item.search.name,
+        before: tweetsToUpdate,
+        after: updatedDocuments,
+      });
 
       const { id: lastProcessedUntilTweetId, date: lastProcessedTweetCreatedAt } =
         scraper.getLastProcessedRetweet() || {};
