@@ -45,6 +45,7 @@
     "mongoose": "5.13.7",
     "open-graph-scraper": "4.9.2",
     "rimraf": "^3.0.2",
+    "sib-api-v3-typescript": "^2.2.2",
     "temp": "^0.9.4",
     "ts-node": "10.2.1",
     "typescript": "4.4.3"

@@ -88,7 +88,32 @@ export const batchUpsert =
     });
 
     try {
-      await TweetModel.bulkWrite(bulkQueries);
+      return await TweetModel.bulkWrite(bulkQueries);
+    } catch (e) {
+      logging.error(e);
+      logging.error(JSON.stringify(e.writeErrors, null, 2));
+      throw e;
+    }
+  };
+
+export const batchUpsertAndReturnDocument =
+  (session: ClientSession = undefined) =>
+  async (tweets: SnscrapeTweet[], searchId: string) => {
+    const bulkPromises = tweets.map((tweet) =>
+      TweetModel.findOneAndUpdate(
+        { id: tweet.id },
+        {
+          $set: formatTweet(tweet),
+          $addToSet: {
+            searches: searchId,
+          },
+        },
+        { new: true, upsert: true }
+      )
+    );
+
+    try {
+      return await Promise.all(bulkPromises);
     } catch (e) {
       logging.error(e);
       logging.error(JSON.stringify(e.writeErrors, null, 2));
