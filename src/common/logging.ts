@@ -6,6 +6,10 @@ export interface Logger {
   warn: (...args: any[]) => any;
   error: (...args: any[]) => any;
 }
+console.log(''); //eslint-disable-line
+console.log('╔════START══process.env.DEBUG══════════════════════════════════════════════════'); //eslint-disable-line
+console.log(process.env.DEBUG); //eslint-disable-line
+console.log('╚════END════process.env.DEBUG══════════════════════════════════════════════════'); //eslint-disable-line
 
 const getTime = () => {
   const date = new Date();
