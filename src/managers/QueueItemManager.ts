@@ -111,6 +111,46 @@ export default class QueueItemManager {
     }
   };
 
+  createMissingQueueItemsIfNotExist = async () => {
+    const searches = await SearchModel.aggregate([
+      {
+        $lookup: {
+          from: 'queueitems',
+          localField: '_id',
+          foreignField: 'search',
+          as: 'queueitems',
+        },
+      },
+      {
+        $sort: {
+          'queueitems.createdAt': 1,
+        },
+      },
+    ]);
+
+    searches.map(async (search) => {
+      const hasRetweet = search.queueitems.some(
+        ({ action }) => action === QueueItemActionTypes.RETWEETS
+      );
+      const nbQueueItems = search.queueitems.length;
+      if (!hasRetweet && nbQueueItems > 10) {
+        await QueueItemModel.create(
+          [
+            {
+              action: QueueItemActionTypes.RETWEETS,
+              status: QueueItemStatuses.PENDING,
+              priority: QueueItemManager.PRIORITIES.HIGH,
+              processingDate: new Date(),
+              search: search._id,
+              metadata: search.queueitems[2].metadata,
+            },
+          ],
+          this.session ? { session: this.session } : {}
+        );
+      }
+    });
+  };
+
   getPendingSearches = async (
     action = QueueItemActionTypes.SEARCH,
     minPriority: number = QueueItemManager.PRIORITIES.NOW
@@ -246,6 +286,47 @@ export default class QueueItemManager {
       console.error(e);
       throw new Error(
         `Could not stop processing with error for queueItem ${item._id} and processor ${this.processorId}`
+      );
+    }
+  };
+
+  startProcessingRetweets = async (item: QueueItem) => {
+    this.logger.debug(
+      `Start processing Retweets for queueItem ${item._id} (pr:${item.priority}) and processor ${this.processorId}`
+    );
+    try {
+      await QueueItemModel.updateOne(
+        { _id: item._id },
+        { $set: { status: QueueItemStatuses.PROCESSING, processorId: this.processorId } }
+      );
+    } catch (e) {
+      this.logger.error(e);
+      throw new Error(
+        `Could not start processing Retweets for queueItem ${item._id} and processor ${this.processorId}`
+      );
+    }
+  };
+
+  stopProcessingRetweets = async (item: QueueItem, itemData: Partial<QueueItem>) => {
+    this.logger.debug(
+      `Stop processing for queueItem ${item._id} and processor ${this.processorId}`
+    );
+    try {
+      await QueueItemModel.updateOne(
+        { _id: item._id },
+        {
+          $set: {
+            status: QueueItemStatuses.DONE,
+            processorId: this.processorId,
+            ...itemData,
+          },
+        },
+        this.session ? { session: this.session } : {}
+      );
+    } catch (e) {
+      this.logger.error(e);
+      throw new Error(
+        `Could not stop processing for queueItem ${item._id} and processor ${this.processorId}`
       );
     }
   };
