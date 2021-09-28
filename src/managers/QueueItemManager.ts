@@ -60,18 +60,20 @@ export default class QueueItemManager {
     }
   };
 
-  createSearch = async (
+  create = async (
     search: string,
     {
       lastEvaluatedUntilTweetId,
       lastEvaluatedSinceTweetId,
       priority = QueueItemManager.PRIORITIES.NOW,
       processingDate,
+      action = QueueItemActionTypes.SEARCH,
     }: {
       lastEvaluatedUntilTweetId?: string;
       lastEvaluatedSinceTweetId?: string;
       priority?: number;
       processingDate?: Date;
+      action?: QueueItemActionTypes;
     } = {}
   ) => {
     try {
@@ -79,7 +81,7 @@ export default class QueueItemManager {
         [
           {
             priority,
-            action: QueueItemActionTypes.SEARCH,
+            action,
             status: QueueItemStatuses.PENDING,
             processingDate,
             search,
@@ -109,12 +111,15 @@ export default class QueueItemManager {
     }
   };
 
-  getPendingSearches = async (minPriority: number = QueueItemManager.PRIORITIES.NOW) => {
+  getPendingSearches = async (
+    action = QueueItemActionTypes.SEARCH,
+    minPriority: number = QueueItemManager.PRIORITIES.NOW
+  ) => {
     this.logger.debug(`get PENDING items`);
     try {
       const query: FilterQuery<QueueItem> = {
         status: QueueItemStatuses.PENDING,
-        action: QueueItemActionTypes.SEARCH,
+        action,
         processingDate: { $lte: new Date() },
         priority: { $gte: minPriority },
       };
@@ -211,6 +216,7 @@ export default class QueueItemManager {
       );
     }
   };
+
   stopProcessingSearchWithError = async (item: QueueItem, searchData: Partial<Search>) => {
     this.logger.debug(
       `Stop processing with error for queueItem ${item._id} and processor ${this.processorId}`

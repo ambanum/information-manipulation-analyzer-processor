@@ -107,6 +107,7 @@ export interface SnscrapeOptions {
   nbTweetsToScrapeFirstTime?: number;
   nbTweetsToScrape?: number;
   logger?: logging.Logger;
+  dirSuffix?: string;
 }
 
 const NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT = 1000;
@@ -141,6 +142,7 @@ export default class Snscrape {
       nbTweetsToScrapeFirstTime = NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT,
       nbTweetsToScrape = NB_TWEETS_TO_SCRAPE_DEFAULT,
       logger,
+      dirSuffix = '',
     }: SnscrapeOptions = {}
   ) {
     this.logger = logger || logging.getLogger();
@@ -149,7 +151,7 @@ export default class Snscrape {
     this.dir = path.join(
       os.tmpdir(),
       'information-manipulation-analyzer',
-      search.replace(/[/\\?&%*:$|"<>]/g, '-') // replace invalid characters for a folder
+      `${search.replace(/[/\\?&%*:$|"<>]/g, '-')}${dirSuffix ? `_${dirSuffix}` : ''}` // replace invalid characters for a folder
     );
 
     this.filter = resumeUntilTweetId
@@ -167,7 +169,6 @@ export default class Snscrape {
     fs.mkdirSync(this.dir, { recursive: true });
     this.originalFilePath = `${this.dir}/original.json`;
     this.formattedFilePath = `${this.dir}/formatted.json`;
-    this.downloadTweets();
   }
 
   private downloadTweets = () => {
