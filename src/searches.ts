@@ -45,7 +45,10 @@ export default class SearchPoller {
   }
 
   async pollSearches() {
-    const { item, count } = await this.queueItemManager.getPendingSearches(MIN_PRIORITY);
+    const { item, count } = await this.queueItemManager.getPendingSearches(
+      QueueItemActionTypes.SEARCH,
+      MIN_PRIORITY
+    );
 
     if (!item) {
       await ProcessorManager.update(this.processorId, { lastPollAt: new Date() });
@@ -107,7 +110,7 @@ export default class SearchPoller {
       await ProcessorManager.update(this.processorId, { lastProcessedAt: new Date() });
 
       let scraper = initScraper();
-
+      scraper.downloadTweets();
       // save volumetry
       const volumetry = scraper.getVolumetry();
       await SearchVolumetryManager.batchUpsert(session)(
@@ -148,7 +151,7 @@ export default class SearchPoller {
 
         if (lastEvaluatedUntilTweetId !== lastProcessedUntilTweetId && lastProcessedUntilTweetId) {
           // There might be some more data to retrieve
-          await this.queueItemManager.createSearch(item.search._id, {
+          await this.queueItemManager.create(item.search._id, {
             lastEvaluatedUntilTweetId: lastProcessedUntilTweetId,
             priority: item.priority + 1,
           });
@@ -160,7 +163,7 @@ export default class SearchPoller {
         }
 
         if (isFirstRequest) {
-          await this.queueItemManager.createSearch(item.search._id, {
+          await this.queueItemManager.create(item.search._id, {
             lastEvaluatedSinceTweetId: firstProcessedUntilTweetId,
             priority: QueueItemManager.PRIORITIES.HIGH,
             processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
@@ -187,10 +190,9 @@ export default class SearchPoller {
             }
           );
         } else {
-          await this.queueItemManager.createSearch(item.search._id, {
+          await this.queueItemManager.create(item.search._id, {
             lastEvaluatedSinceTweetId: firstProcessedUntilTweetId,
             priority: QueueItemManager.PRIORITIES.HIGH,
-            processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
           });
           await this.queueItemManager.stopProcessingSearch(
             item,

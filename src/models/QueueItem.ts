@@ -4,6 +4,7 @@ import { Search } from './Search';
 
 export enum QueueItemActionTypes {
   SEARCH = 'SEARCH',
+  RETWEETS = 'RETWEETS',
 }
 
 export enum QueueItemStatuses {

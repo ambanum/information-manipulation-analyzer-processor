@@ -5,6 +5,7 @@ import * as logging from 'common/logging';
 
 import { getProvider, getVersion } from 'botscore';
 
+import RetweetsPoller from './retweets';
 import Scraper from 'common/node-snscrape';
 import SearchPoller from './searches';
 import Server from './server';
@@ -12,13 +13,12 @@ import UserPoller from './users';
 import dbConnect from 'common/db';
 // @ts-ignore
 import packageJson from '../package.json';
-
 const { version } = packageJson;
 
-const service: 'search' | 'server' | 'user' | string = process.argv[2];
+const service: 'search' | 'server' | 'user' | 'retweets' | string = process.argv[2];
 
-if (!['search', 'server', 'user'].includes(service)) {
-  console.error("You need to specify a service 'search' | 'server' | 'user'");
+if (!['search', 'server', 'user', 'retweets'].includes(service)) {
+  console.error("You need to specify a service 'search' | 'server' | 'user' | 'retweets'");
   process.exit();
 }
 
@@ -58,6 +58,11 @@ const processorMetadata = {
       } else {
         logging.info('No USER_BOT_SCORES started');
       }
+    }
+    if (service === 'retweets') {
+      const retweetsPoller = new RetweetsPoller({ processorId: PROCESSOR });
+      await retweetsPoller.init();
+      await retweetsPoller.pollRetweets();
     } else {
       const searchPoller = new SearchPoller({ processorId: PROCESSOR });
       await searchPoller.init();
