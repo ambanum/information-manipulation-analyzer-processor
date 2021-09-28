@@ -15,7 +15,7 @@ const getTime = () => {
     .padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
 };
 
-export const debug = (...args: any[]) => console.log('ima:debug', `[${getTime()}]`, ...args);
+export const debug = (...args: any[]) => debugLib('ima:debug')(`[${getTime()}]`, ...args);
 // spaces are intended to align correclty logs in console
 export const info = (...args: any[]) => console.log('ima: info', `[${getTime()}]`, ...args);
 export const warn = (...args: any[]) => console.log('ima: warn', `[${getTime()}]`, ...args);
