@@ -35,10 +35,10 @@ const sendAlertIfNeeded = async ({ name, before, after }) => {
     );
 
     const isOverAlertThreshold =
-      initialData.likeCount - updatedDocument.likeCount > 1000 ||
-      initialData.retweetCount - updatedDocument.retweetCount > 100 ||
-      initialData.quoteCount - updatedDocument.quoteCount > 100 ||
-      initialData.replyCount - updatedDocument.replyCount > 1000;
+      initialData.likeCount - updatedDocument.likeCount > 100 ||
+      initialData.retweetCount - updatedDocument.retweetCount > 10 ||
+      initialData.quoteCount - updatedDocument.quoteCount > 10 ||
+      initialData.replyCount - updatedDocument.replyCount > 100;
 
     if (isOverAlertThreshold) {
       supsiciousRiseMessage += `
