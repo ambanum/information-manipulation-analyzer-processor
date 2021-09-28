@@ -143,8 +143,7 @@ export default class RetweetsPoller {
         tweetsToUpdate,
         item.search._id
       );
-      this.logger.info(`Updated ${updatedDocuments.length} tweets for `);
-
+      this.logger.info(`Updated ${updatedDocuments.length} tweets for ${item.search.name}`);
       await sendAlertIfNeeded({
         name: item.search.name,
         before: tweetsToUpdate,
