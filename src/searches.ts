@@ -193,7 +193,6 @@ export default class SearchPoller {
           await this.queueItemManager.create(item.search._id, {
             lastEvaluatedSinceTweetId: firstProcessedUntilTweetId,
             priority: QueueItemManager.PRIORITIES.HIGH,
-            processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
           });
           await this.queueItemManager.stopProcessingSearch(
             item,
