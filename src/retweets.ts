@@ -164,7 +164,7 @@ export default class RetweetsPoller {
           processingDate: new Date(Date.now() + NEXT_PROCESS_IN_FUTURE),
           metadata: {
             ...(item.metadata || {}),
-            numberTimesCrawled: (item.metadata.numberTimesCrawled || 0) + 1,
+            numberTimesCrawled: (item?.metadata?.numberTimesCrawled || 0) + 1,
           },
         });
       } else {
