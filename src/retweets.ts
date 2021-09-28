@@ -20,6 +20,11 @@ const NB_TWEETS_TO_SCRAPE_ANYWAY = NB_TWEETS_TO_SCRAPE ? +NB_TWEETS_TO_SCRAPE : 
 const SCRAPE_VERSION = 1;
 const notifier = new EmailNotifier(process?.env?.SENDINBLUE_API_KEY);
 
+console.log(''); //eslint-disable-line
+console.log('╔════START══process.env══════════════════════════════════════════════════'); //eslint-disable-line
+console.log(process.env); //eslint-disable-line
+console.log('╚════END════process.env══════════════════════════════════════════════════'); //eslint-disable-line
+
 const sendAlertIfNeeded = async ({ name, before, after }) => {
   if (!process?.env?.SENDINBLUE_API_KEY) {
     logging.warn("Can't send email because SENDINBLUE_API_KEY is not configured");
