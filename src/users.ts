@@ -37,7 +37,7 @@ export default class UserPoller {
           user.botScoreMetadata = botScore.botScoreMetadata;
           await user.save({ validateBeforeSave: false });
         } catch (e) {
-          this.logger.error(`Could not get for ${user.username}`);
+          this.logger.error(`Could not get for ${user?.username}`);
           this.logger.error(e);
         }
       }

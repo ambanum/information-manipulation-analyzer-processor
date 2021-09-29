@@ -42,7 +42,7 @@ const sendAlertIfNeeded = async ({ name, before, after }) => {
 
     if (isOverAlertThreshold) {
       supsiciousRiseMessage += `
-      <h2>A tweet from <strong>${updatedDocument.username}</strong> is pumping. <a href="https://www.twitter.com/${updatedDocument.username}/status/${updatedDocument.id}">Check it out</a></h2>
+      <h2>A tweet from <strong>${updatedDocument?.username}</strong> is pumping. <a href="https://www.twitter.com/${updatedDocument?.username}/status/${updatedDocument.id}">Check it out</a></h2>
 
       <div style="font-style:italic">${updatedDocument.content}</div>
       <div style="font-style:italic;font-size:0.8em">Created: ${updatedDocument.date}</div>

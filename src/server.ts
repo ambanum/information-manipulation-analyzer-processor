@@ -53,7 +53,7 @@ export default class Server {
         }
 
         options.rawJson = JSON.stringify(user);
-        const botScore = await getBotScore(req.params.username, options);
+        const botScore = await getBotScore(req.params?.username, options);
         user.botScore = botScore.botScore;
         user.botScoreUpdatedAt = botScore.botScoreUpdatedAt;
         user.botScoreProvider = botScore.botScoreProvider;
