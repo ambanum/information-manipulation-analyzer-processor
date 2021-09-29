@@ -50,6 +50,8 @@
       PROCESSOR_ID: '1'
       SERVER_PORT: '4000'
       PEREN_API_KEY: '{{ peren_api_key }}'
+      SENDINBLUE_API_KEY: '{{ sib_api_key }}'
+      FRONT_URL: '{{ front_url }}'
     ports:
       - '{{ app_port }}:4000'
 
@@ -68,6 +70,26 @@
       MIN_PRIORITY: '2'
       API: 'false'
       USER_BOT_SCORES: 'false'
+      SENDINBLUE_API_KEY: '{{ sib_api_key }}'
+      FRONT_URL: '{{ front_url }}'
+
+- name: Start the third container
+  become: yes
+  when: nb_processors == '3'
+  community.general.docker_container:
+    name: '{{ app }}-3'
+    image: '{{ app }}:{{ package.version }}'
+    restart: yes
+    state: started
+    restart_policy: unless-stopped
+    env:
+      PROCESSOR_ID: '3'
+      NB_TWEETS_TO_SCRAPE: '6000'
+      MIN_PRIORITY: '2'
+      API: 'false'
+      USER_BOT_SCORES: 'false'
+      SENDINBLUE_API_KEY: '{{ sib_api_key }}'
+      FRONT_URL: '{{ front_url }}'
 
 - name: Prune containers and images
   become: yes

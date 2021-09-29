@@ -2,9 +2,9 @@
 
 This is the processor of the "Information Manipulation Analyzer" project.
 
-The main idea is to show the volumetry of a hashtag along with some other informations in order to have a better idea of whether or not a hashtag has been artificially improved.
+The main idea is to show the volumetry of a keyword,hashtag,cashtag along with some other informations in order to have a better idea of whether or not a narrative has been artificially improved.
 
-The frontend that will actually log the hashtags to analyze and display the results can be found [here](https://github.com/ambanum/information-manipulation-analyzer)
+The frontend that will actually log the searches to analyze and display the results can be found [here](https://github.com/ambanum/information-manipulation-analyzer)
 
 ## Technical stack
 
@@ -15,9 +15,10 @@ We are also using a [Bot detection library](https://github.com/ambanum/social-ne
 
 Main program launches concurrently **3** processes to keep some kind of separation of concern in case we want someday to extract some of them into different microservices
 
-- `src/hashtas.ts` will poll on every tick and retrieve volumetry for one hashtag at a time, beginning with the most recent
-- `src/users.ts` will poll on every tick an use the bot detection library to enhance user's data in the database
+- `src/hashtags.ts` will poll on every tick and retrieve volumetry for one hashtag at a time, beginning with the most recent
+- `src/users.ts` will poll on every tick and use the bot detection library to enhance user's data in the database
 - `src/server.ts` will expose a server that permits to execute the above services with API calls. (This server is not secured as it is only meant to be used locally through http://localhost:4000)
+- `src/retweets.ts` will poll on every tick and retrieve all RT since last call and update the given tweets with the latest information
 
 ## Development
 

@@ -17,9 +17,9 @@ const getTime = () => {
 
 export const debug = (...args: any[]) => debugLib('ima:debug')(`[${getTime()}]`, ...args);
 // spaces are intended to align correclty logs in console
-export const info = (...args: any[]) => debugLib('ima: info')(`[${getTime()}]`, ...args);
-export const warn = (...args: any[]) => debugLib('ima: warn')(`[${getTime()}]`, ...args);
-export const error = (...args: any[]) => debugLib('ima:error')(`[${getTime()}]`, ...args);
+export const info = (...args: any[]) => console.log('ima: info', `[${getTime()}]`, ...args);
+export const warn = (...args: any[]) => console.log('ima: warn', `[${getTime()}]`, ...args);
+export const error = (...args: any[]) => console.log('ima:error', `[${getTime()}]`, ...args);
 
 export const getLogger = (prefix?: string): Logger => {
   const getArgs = (...args) => (!!prefix ? [prefix, ...args] : [...args]);

@@ -5,6 +5,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import rimraf from 'rimraf';
+import uniqBy from 'lodash/fp/uniqBy';
 
 interface User {
   username: string;
@@ -107,6 +108,7 @@ export interface SnscrapeOptions {
   nbTweetsToScrapeFirstTime?: number;
   nbTweetsToScrape?: number;
   logger?: logging.Logger;
+  dirSuffix?: string;
 }
 
 const NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT = 1000;
@@ -115,11 +117,14 @@ const SNSCRAPE_PATH = process.env.SNSCRAPE_PATH || 'snscrape';
 
 export default class Snscrape {
   private tweets: Tweet[];
+  private retweets: Tweet[];
   private search: string;
   private originalFilePath: string;
   private formattedFilePath: string;
   private firstProcessedTweet?: Tweet;
   private lastProcessedTweet?: Tweet;
+  private firstProcessedRetweet?: Tweet;
+  private lastProcessedRetweet?: Tweet;
   private nbTweetsToScrape?: number;
   private filter?: string;
   private dir: string;
@@ -141,6 +146,7 @@ export default class Snscrape {
       nbTweetsToScrapeFirstTime = NB_TWEETS_TO_SCRAPE_FIRST_TIME_DEFAULT,
       nbTweetsToScrape = NB_TWEETS_TO_SCRAPE_DEFAULT,
       logger,
+      dirSuffix = '',
     }: SnscrapeOptions = {}
   ) {
     this.logger = logger || logging.getLogger();
@@ -149,7 +155,7 @@ export default class Snscrape {
     this.dir = path.join(
       os.tmpdir(),
       'information-manipulation-analyzer',
-      search.replace(/[/\\?&%*:$|"<>]/g, '-') // replace invalid characters for a folder
+      `${search.replace(/[/\\?&%*:$|"<>]/g, '-')}${dirSuffix ? `_${dirSuffix}` : ''}` // replace invalid characters for a folder
     );
 
     this.filter = resumeUntilTweetId
@@ -167,10 +173,49 @@ export default class Snscrape {
     fs.mkdirSync(this.dir, { recursive: true });
     this.originalFilePath = `${this.dir}/original.json`;
     this.formattedFilePath = `${this.dir}/formatted.json`;
-    this.downloadTweets();
   }
 
-  private downloadTweets = () => {
+  public downloadRetweets = () => {
+    if (this.tweets) {
+      return this.tweets;
+    }
+
+    if (!fs.existsSync(this.formattedFilePath)) {
+      const cmd = `${SNSCRAPE_PATH} --with-entity --max-results ${
+        this.nbTweetsToScrape
+      } --jsonl twitter-search "+${this.search.replace('$', '\\$')} filter:nativeretweets ${
+        this.filter ? ` ${this.filter}` : ''
+      }" > "${this.originalFilePath}"`;
+      this.logger.info(cmd);
+      execCmd(cmd);
+      try {
+        // id are number that are tool big to be parsed by jq so change them in string
+        execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
+        // json format given by twint is weird and we need jq to recreate them
+        execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
+      } catch (e) {
+        this.logger.error(e); // eslint-disable-line
+
+        // TODO either end with error or fallback gently, depending on the error
+        execCmd(`echo "[]" > "${this.formattedFilePath}"`);
+      }
+    }
+
+    delete require.cache[require.resolve(this.formattedFilePath)];
+    this.retweets = require(this.formattedFilePath);
+
+    this.firstProcessedRetweet = this.retweets[0];
+    this.lastProcessedRetweet = this.retweets[this.retweets.length - 1];
+
+    if (this.filter) {
+      // remove last beginning tweet to not count it twice
+      this.retweets = this.retweets.filter((t) => t.id !== this.filter.split(':')[1]);
+    }
+
+    return this.retweets;
+  };
+
+  public downloadTweets = () => {
     if (this.tweets) {
       return this.tweets;
     }
@@ -192,7 +237,7 @@ export default class Snscrape {
         execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
       } catch (e) {
         this.logger.error(e); // eslint-disable-line
-
+        process.exit();
         // TODO either end with error or fallback gently, depending on the error
         execCmd(`echo "[]" > "${this.formattedFilePath}"`);
       }
@@ -214,6 +259,16 @@ export default class Snscrape {
     //   console.log(i, tweet?.id, tweet?.date, tweet?.time, tweet?.username, tweet?.tweet);
     // });
     return this.tweets;
+  };
+
+  public getRetweetUpdatedValues = () => {
+    this.logger.info(
+      `Formatting ${this.retweets.length} retweets updated data ${this.search} ${this.filter}`
+    );
+
+    const updatedValues = this.retweets.map(({ retweetedTweet }) => retweetedTweet);
+
+    return uniqBy('id')(updatedValues);
   };
 
   public getVolumetry = () => {
@@ -280,10 +335,31 @@ export default class Snscrape {
     return this.firstProcessedTweet;
   };
 
+  public getLastProcessedRetweet = () => {
+    this.logger.debug(
+      `Get Last Processed retweet for ${this.search} ${this.lastProcessedRetweet?.date}`
+    );
+    return this.lastProcessedRetweet;
+  };
+
+  public getFirstProcessedRetweet = () => {
+    this.logger.debug(
+      `Get First Processed tweet for ${this.search} ${this.firstProcessedRetweet?.date}`
+    );
+    return this.firstProcessedRetweet;
+  };
+
   public getUsers = (): User[] => {
     this.logger.debug(`Get users from tweets for ${this.search}`);
     const uniqueUsers = {};
-    this.tweets.forEach((tweet) => (uniqueUsers[tweet.user.id] = tweet.user));
+    this.tweets.forEach((tweet) => {
+      if (!tweet?.user?.id) {
+        logging.error('This tweet has no user!!');
+        logging.error(tweet);
+      } else {
+        uniqueUsers[tweet.user.id] = tweet.user;
+      }
+    });
     return Object.values(uniqueUsers);
   };
 
