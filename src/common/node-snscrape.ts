@@ -364,7 +364,7 @@ export default class Snscrape {
   };
 
   public getTweets = () => {
-    return this.tweets;
+    return this.tweets.filter((tweet) => !!tweet.id);
   };
 
   static getUser = (
