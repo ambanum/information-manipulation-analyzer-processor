@@ -1,5 +1,4 @@
 import * as ProcessorManager from 'managers/ProcessorManager';
-import * as SearchVolumetryManager from 'managers/SearchVolumetryManager';
 import * as TweetManager from 'managers/TweetManager';
 import * as UserManager from 'managers/UserManager';
 import * as logging from 'common/logging';
@@ -110,13 +109,6 @@ export default class SearchPoller {
 
       let scraper = initScraper();
       scraper.downloadTweets();
-      // save volumetry
-      const volumetry = scraper.getVolumetry();
-      await SearchVolumetryManager.batchUpsert(session)(
-        item.search._id,
-        volumetry,
-        Scraper.platformId
-      );
 
       // save users
       const users = scraper.getUsers();

@@ -271,56 +271,6 @@ export default class Snscrape {
     return uniqBy('id')(updatedValues);
   };
 
-  public getVolumetry = () => {
-    this.logger.info(
-      `Formatting ${this.tweets.length} into volumetry for ${this.search} ${this.filter}`
-    );
-
-    // FIXME PERF REDUCE
-    const volumetry = this.tweets.reduce((acc: Volumetry, tweet) => {
-      if (!tweet) {
-        return acc;
-      }
-
-      const date = `${tweet.date.replace(/\d\d:\d\d\+(.*)/, '00:00+$1')}`;
-      if (!tweet.date.endsWith('+00:00')) {
-        this.logger.error('tweet has a date that does not end with +00:00');
-        this.logger.error(tweet);
-      }
-
-      const associatedHashtags = acc[date]?.associatedHashtags || {};
-
-      (tweet.hashtags || []).forEach((tweetHashtag) => {
-        const existingNumber =
-          associatedHashtags[tweetHashtag] && typeof associatedHashtags[tweetHashtag] === 'number'
-            ? associatedHashtags[tweetHashtag]
-            : 0;
-
-        associatedHashtags[tweetHashtag] = existingNumber + 1;
-      });
-
-      return {
-        ...acc,
-        [date]: {
-          tweets: (acc[date]?.tweets || 0) + 1,
-          retweets: (acc[date]?.retweets || 0) + tweet.retweetCount,
-          likes: (acc[date]?.likes || 0) + tweet.likeCount,
-          quotes: (acc[date]?.quotes || 0) + tweet.replyCount,
-          usernames: {
-            ...(acc[date]?.usernames || {}),
-            [tweet.user.username]: (acc[date]?.usernames[tweet.user.username] || 0) + 1,
-          },
-          languages: {
-            ...(acc[date]?.languages || {}),
-            [tweet.lang]: (acc[date]?.languages[tweet.lang] || 0) + 1,
-          },
-          associatedHashtags,
-        },
-      };
-    }, {});
-    return volumetry;
-  };
-
   public getLastProcessedTweet = () => {
     this.logger.debug(
       `Get Last Processed tweet for ${this.search} ${this.lastProcessedTweet?.date}`
