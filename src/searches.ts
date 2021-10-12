@@ -1,5 +1,4 @@
 import * as ProcessorManager from 'managers/ProcessorManager';
-import * as SearchVolumetryManager from 'managers/SearchVolumetryManager';
 import * as TweetManager from 'managers/TweetManager';
 import * as UserManager from 'managers/UserManager';
 import * as logging from 'common/logging';
@@ -49,7 +48,6 @@ export default class SearchPoller {
       QueueItemActionTypes.SEARCH,
       MIN_PRIORITY
     );
-
     if (!item) {
       await ProcessorManager.update(this.processorId, { lastPollAt: new Date() });
       this.logger.debug(`No more items to go, waiting ${WAIT_TIME / 1000}s`);
@@ -97,7 +95,7 @@ export default class SearchPoller {
         next: isRequestForNewData,
       });
 
-      if (item.search.get('type') === 'URL' && !item.search?.metadata?.url?.scrapedAt) {
+      if (item.search.type === 'URL' && !item.search?.metadata?.url?.scrapedAt) {
         const data = await getUrlData(item.search.name);
 
         item.search.set('metadata', {
@@ -111,13 +109,6 @@ export default class SearchPoller {
 
       let scraper = initScraper();
       scraper.downloadTweets();
-      // save volumetry
-      const volumetry = scraper.getVolumetry();
-      await SearchVolumetryManager.batchUpsert(session)(
-        item.search._id,
-        volumetry,
-        Scraper.platformId
-      );
 
       // save users
       const users = scraper.getUsers();

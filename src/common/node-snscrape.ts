@@ -175,7 +175,7 @@ export default class Snscrape {
     this.formattedFilePath = `${this.dir}/formatted.json`;
   }
 
-  public downloadRetweets = () => {
+  public downloadRetweets = (retry = 3) => {
     if (this.tweets) {
       return this.tweets;
     }
@@ -200,9 +200,18 @@ export default class Snscrape {
         execCmd(`echo "[]" > "${this.formattedFilePath}"`);
       }
     }
-
-    delete require.cache[require.resolve(this.formattedFilePath)];
-    this.retweets = require(this.formattedFilePath);
+    try {
+      delete require.cache[require.resolve(this.formattedFilePath)];
+      this.retweets = require(this.formattedFilePath);
+    } catch (e) {
+      if (retry !== 0) {
+        this.logger.warn(`retrying downloading retweets after error ${retry}`); // eslint-disable-line
+        this.logger.warn(e); // eslint-disable-line
+        this.purge();
+        return this.downloadTweets(retry - 1);
+      }
+      throw e;
+    }
 
     this.firstProcessedRetweet = this.retweets[0];
     this.lastProcessedRetweet = this.retweets[this.retweets.length - 1];
@@ -215,7 +224,7 @@ export default class Snscrape {
     return this.retweets;
   };
 
-  public downloadTweets = () => {
+  public downloadTweets = (retry = 3) => {
     if (this.tweets) {
       return this.tweets;
     }
@@ -237,15 +246,23 @@ export default class Snscrape {
         execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
       } catch (e) {
         this.logger.error(e); // eslint-disable-line
-        process.exit();
         // TODO either end with error or fallback gently, depending on the error
         execCmd(`echo "[]" > "${this.formattedFilePath}"`);
       }
     }
-
-    delete require.cache[require.resolve(this.formattedFilePath)];
-    this.tweets = require(this.formattedFilePath);
-
+    try {
+      delete require.cache[require.resolve(this.formattedFilePath)];
+      this.tweets = require(this.formattedFilePath);
+    } catch (e) {
+      if (retry !== 0) {
+        this.logger.warn(`retrying downloading tweets after error ${retry}`); // eslint-disable-line
+        this.logger.warn(e); // eslint-disable-line
+        this.purge();
+        return this.downloadTweets(retry - 1);
+      }
+      process.exit();
+      throw e;
+    }
     this.firstProcessedTweet = this.tweets[0];
     this.lastProcessedTweet = this.tweets[this.tweets.length - 1];
 
@@ -269,56 +286,6 @@ export default class Snscrape {
     const updatedValues = this.retweets.map(({ retweetedTweet }) => retweetedTweet);
 
     return uniqBy('id')(updatedValues);
-  };
-
-  public getVolumetry = () => {
-    this.logger.info(
-      `Formatting ${this.tweets.length} into volumetry for ${this.search} ${this.filter}`
-    );
-
-    // FIXME PERF REDUCE
-    const volumetry = this.tweets.reduce((acc: Volumetry, tweet) => {
-      if (!tweet) {
-        return acc;
-      }
-
-      const date = `${tweet.date.replace(/\d\d:\d\d\+(.*)/, '00:00+$1')}`;
-      if (!tweet.date.endsWith('+00:00')) {
-        this.logger.error('tweet has a date that does not end with +00:00');
-        this.logger.error(tweet);
-      }
-
-      const associatedHashtags = acc[date]?.associatedHashtags || {};
-
-      (tweet.hashtags || []).forEach((tweetHashtag) => {
-        const existingNumber =
-          associatedHashtags[tweetHashtag] && typeof associatedHashtags[tweetHashtag] === 'number'
-            ? associatedHashtags[tweetHashtag]
-            : 0;
-
-        associatedHashtags[tweetHashtag] = existingNumber + 1;
-      });
-
-      return {
-        ...acc,
-        [date]: {
-          tweets: (acc[date]?.tweets || 0) + 1,
-          retweets: (acc[date]?.retweets || 0) + tweet.retweetCount,
-          likes: (acc[date]?.likes || 0) + tweet.likeCount,
-          quotes: (acc[date]?.quotes || 0) + tweet.replyCount,
-          usernames: {
-            ...(acc[date]?.usernames || {}),
-            [tweet.user.username]: (acc[date]?.usernames[tweet.user.username] || 0) + 1,
-          },
-          languages: {
-            ...(acc[date]?.languages || {}),
-            [tweet.lang]: (acc[date]?.languages[tweet.lang] || 0) + 1,
-          },
-          associatedHashtags,
-        },
-      };
-    }, {});
-    return volumetry;
   };
 
   public getLastProcessedTweet = () => {
