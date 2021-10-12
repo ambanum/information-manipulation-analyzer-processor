@@ -49,7 +49,6 @@ export default class SearchPoller {
       QueueItemActionTypes.SEARCH,
       MIN_PRIORITY
     );
-
     if (!item) {
       await ProcessorManager.update(this.processorId, { lastPollAt: new Date() });
       this.logger.debug(`No more items to go, waiting ${WAIT_TIME / 1000}s`);
@@ -97,7 +96,7 @@ export default class SearchPoller {
         next: isRequestForNewData,
       });
 
-      if (item.search.get('type') === 'URL' && !item.search?.metadata?.url?.scrapedAt) {
+      if (item.search.type === 'URL' && !item.search?.metadata?.url?.scrapedAt) {
         const data = await getUrlData(item.search.name);
 
         item.search.set('metadata', {
