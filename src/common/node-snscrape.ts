@@ -175,7 +175,7 @@ export default class Snscrape {
     this.formattedFilePath = `${this.dir}/formatted.json`;
   }
 
-  public downloadRetweets = () => {
+  public downloadRetweets = (retry = 3) => {
     if (this.tweets) {
       return this.tweets;
     }
@@ -200,9 +200,18 @@ export default class Snscrape {
         execCmd(`echo "[]" > "${this.formattedFilePath}"`);
       }
     }
-
-    delete require.cache[require.resolve(this.formattedFilePath)];
-    this.retweets = require(this.formattedFilePath);
+    try {
+      delete require.cache[require.resolve(this.formattedFilePath)];
+      this.retweets = require(this.formattedFilePath);
+    } catch (e) {
+      if (retry !== 0) {
+        this.logger.warn(`retrying downloading retweets after error ${retry}`); // eslint-disable-line
+        this.logger.warn(e); // eslint-disable-line
+        this.purge();
+        return this.downloadTweets(retry - 1);
+      }
+      throw e;
+    }
 
     this.firstProcessedRetweet = this.retweets[0];
     this.lastProcessedRetweet = this.retweets[this.retweets.length - 1];
@@ -215,7 +224,7 @@ export default class Snscrape {
     return this.retweets;
   };
 
-  public downloadTweets = () => {
+  public downloadTweets = (retry = 3) => {
     if (this.tweets) {
       return this.tweets;
     }
@@ -237,15 +246,23 @@ export default class Snscrape {
         execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
       } catch (e) {
         this.logger.error(e); // eslint-disable-line
-        process.exit();
         // TODO either end with error or fallback gently, depending on the error
         execCmd(`echo "[]" > "${this.formattedFilePath}"`);
       }
     }
-
-    delete require.cache[require.resolve(this.formattedFilePath)];
-    this.tweets = require(this.formattedFilePath);
-
+    try {
+      delete require.cache[require.resolve(this.formattedFilePath)];
+      this.tweets = require(this.formattedFilePath);
+    } catch (e) {
+      if (retry !== 0) {
+        this.logger.warn(`retrying downloading tweets after error ${retry}`); // eslint-disable-line
+        this.logger.warn(e); // eslint-disable-line
+        this.purge();
+        return this.downloadTweets(retry - 1);
+      }
+      process.exit();
+      throw e;
+    }
     this.firstProcessedTweet = this.tweets[0];
     this.lastProcessedTweet = this.tweets[this.tweets.length - 1];
 
