@@ -108,7 +108,7 @@ export default class SearchPoller {
       await ProcessorManager.update(this.processorId, { lastProcessedAt: new Date() });
 
       let scraper = initScraper();
-      scraper.downloadTweets();
+      await scraper.downloadTweets();
 
       // save users
       const users = scraper.getUsers();

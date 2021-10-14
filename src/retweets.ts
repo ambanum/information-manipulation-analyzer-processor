@@ -136,7 +136,7 @@ export default class RetweetsPoller {
       await ProcessorManager.update(this.processorId, { lastProcessedAt: new Date() });
 
       let scraper = initScraper();
-      scraper.downloadRetweets();
+      await scraper.downloadRetweets();
       const tweetsToUpdate = scraper.getRetweetUpdatedValues();
 
       const updatedDocuments = await TweetManager.batchUpsertAndReturnDocument(session)(
