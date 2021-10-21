@@ -4,6 +4,7 @@ import { execCmd } from 'common/cmd-utils';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import psList from 'ps-list';
 import rimraf from 'rimraf';
 import uniqBy from 'lodash/fp/uniqBy';
 
@@ -175,7 +176,21 @@ export default class Snscrape {
     this.formattedFilePath = `${this.dir}/formatted.json`;
   }
 
-  public downloadRetweets = (retry = 3) => {
+  static isProcessAlreadyRunning = async () => {
+    const allProcesses = await psList();
+    return allProcesses.some((p) => p.cmd.includes(SNSCRAPE_PATH));
+  };
+
+  static waitUntilProcessNotRunning = async () => {
+    const isRunning = await Snscrape.isProcessAlreadyRunning();
+    if (isRunning) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return Snscrape.waitUntilProcessNotRunning();
+    }
+    return true;
+  };
+
+  public downloadRetweets = async (retry = 3) => {
     if (this.tweets) {
       return this.tweets;
     }
@@ -186,8 +201,10 @@ export default class Snscrape {
       } --jsonl twitter-search "+${this.search.replace('$', '\\$')} filter:nativeretweets ${
         this.filter ? ` ${this.filter}` : ''
       }" > "${this.originalFilePath}"`;
+      await Snscrape.waitUntilProcessNotRunning();
       this.logger.info(cmd);
       execCmd(cmd);
+
       try {
         // id are number that are tool big to be parsed by jq so change them in string
         execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
@@ -224,7 +241,7 @@ export default class Snscrape {
     return this.retweets;
   };
 
-  public downloadTweets = (retry = 3) => {
+  public downloadTweets = async (retry = 3) => {
     if (this.tweets) {
       return this.tweets;
     }
@@ -236,6 +253,7 @@ export default class Snscrape {
       } --jsonl twitter-search "+${this.search.replace('$', '\\$')}${
         this.filter ? ` ${this.filter}` : ''
       }" > "${this.originalFilePath}"`;
+      await Snscrape.waitUntilProcessNotRunning();
       this.logger.info(cmd);
       execCmd(cmd);
 

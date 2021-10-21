@@ -1,6 +1,6 @@
 {
   "name": "information-manipulation-analyzer-processor",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "main": "src/index.ts",
   "author": "Martin Ratinaud <martinratinaud@gmail.com>",
   "license": "MIT",
@@ -45,6 +45,7 @@
     "express": "^4.17.1",
     "mongoose": "5.13.7",
     "open-graph-scraper": "4.9.2",
+    "ps-list": "^7.2.0",
     "rimraf": "^3.0.2",
     "sib-api-v3-typescript": "^2.2.2",
     "temp": "^0.9.4",
