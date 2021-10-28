@@ -198,9 +198,12 @@ export default class Snscrape {
     if (!fs.existsSync(this.formattedFilePath)) {
       const cmd = `${SNSCRAPE_PATH} --with-entity --max-results ${
         this.nbTweetsToScrape
-      } --jsonl twitter-search "+${this.search.replace('$', '\\$')} filter:nativeretweets ${
+      } --jsonl twitter-search "+${this.search
+        .replace('$', '\\$')
+        .replace(/"/gim, '\\"')} filter:nativeretweets ${
         this.filter ? ` ${this.filter}` : ''
       }" > "${this.originalFilePath}"`;
+
       await Snscrape.waitUntilProcessNotRunning();
       this.logger.info(cmd);
       execCmd(cmd);
@@ -250,7 +253,9 @@ export default class Snscrape {
       this.logger.debug(`Download tweets to ${this.formattedFilePath} ${this.filter}`);
       const cmd = `${SNSCRAPE_PATH} --with-entity --max-results ${
         this.nbTweetsToScrape
-      } --jsonl twitter-search "+${this.search.replace('$', '\\$')}${
+      } --jsonl twitter-search "+${this.search
+        .replace('$', '\\$')
+        .replace(/"/gim, '\\"')} filter:nativeretweets ${
         this.filter ? ` ${this.filter}` : ''
       }" > "${this.originalFilePath}"`;
       await Snscrape.waitUntilProcessNotRunning();
