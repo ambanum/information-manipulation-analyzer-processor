@@ -46,6 +46,10 @@
     restart: yes
     state: started
     restart_policy: unless-stopped
+    etc_hosts:
+      'mongo1': '172.17.0.1'
+      'mongo2': '172.17.0.1'
+      'mongo3': '172.17.0.1'
     env:
       PROCESSOR_ID: '1'
       SERVER_PORT: '4000'
@@ -64,6 +68,10 @@
     restart: yes
     state: started
     restart_policy: unless-stopped
+    etc_hosts:
+      'mongo1': '172.17.0.1'
+      'mongo2': '172.17.0.1'
+      'mongo3': '172.17.0.1'
     env:
       PROCESSOR_ID: '2'
       NB_TWEETS_TO_SCRAPE: '6000'
@@ -82,6 +90,10 @@
     restart: yes
     state: started
     restart_policy: unless-stopped
+    etc_hosts:
+      'mongo1': '172.17.0.1'
+      'mongo2': '172.17.0.1'
+      'mongo3': '172.17.0.1'
     env:
       PROCESSOR_ID: '3'
       NB_TWEETS_TO_SCRAPE: '6000'
