@@ -101,3 +101,29 @@ If you are part of `AmbNum`, you can use the deploy scripts in the `package.json
 This may happen if you run `yarn docker:run` on a M1
 
 If this happen, well I did not find any solution except testing by building on another machine
+
+## MongooseServerSelectionError: connect ECONNREFUSED ::1:27017 in node v17 and mongo is running
+
+Node `v17.0.1` prefers IPv6 addresses over IPv4 but mongo by default is configured with ipv4.
+
+You need to change `mondodb.conf` configuration from
+
+```
+net:
+  bindIp: 127.0.0.1
+```
+
+to
+
+```
+net:
+  ipv6: true
+  port: 27017
+  bindIpAll: true
+```
+
+and restart mongodb-community `brew services restart mongodb-community`
+
+Good to know : the mongodb configuration file is available in `/usr/local/etc/mongod.conf` (macOS) or in `/opt/homebrew/etc/mongod.conf` (M1 processor). For other OS, read the [doc](https://docs.mongodb.com/manual/reference/configuration-options/)
+
+[See Stackoverflow for more information](https://stackoverflow.com/questions/69957163/mongooseserverselectionerror-connect-econnrefused-127017-in-node-v17-and-mon)
