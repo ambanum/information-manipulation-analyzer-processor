@@ -23,38 +23,36 @@ const scrapedFieldsUsed = [
   'profileImageUrl',
 ];
 
-export const batchUpsert = (session: ClientSession = undefined) => async (
-  users: any[],
-  searchId: string,
-  platformId: string
-) => {
-  const bulkQueries = users.map((user) => {
-    return {
-      updateOne: {
-        filter: { id: user.id, platformId },
-        update: {
-          $set: {
-            ...pick(scrapedFieldsUsed)(user),
-            platformId,
+export const batchUpsert =
+  (session: ClientSession = undefined) =>
+  async (users: any[], searchId: string, platformId: string) => {
+    const bulkQueries = users.map((user) => {
+      return {
+        updateOne: {
+          filter: { id: user.id, platformId },
+          update: {
+            $set: {
+              ...pick(scrapedFieldsUsed)(user),
+              platformId,
+            },
+            $addToSet: {
+              searches: searchId,
+            },
           },
-          $addToSet: {
-            searches: searchId,
-          },
+          upsert: true,
+          session,
         },
-        upsert: true,
-        session,
-      },
-    };
-  });
+      };
+    });
 
-  try {
-    await UserModel.bulkWrite(bulkQueries);
-  } catch (e) {
-    logging.error(e);
-    logging.error(JSON.stringify(users, null, 2));
-    throw e;
-  }
-};
+    try {
+      await UserModel.bulkWrite(bulkQueries);
+    } catch (e) {
+      logging.error(e);
+      logging.error(JSON.stringify(users, null, 2));
+      throw e;
+    }
+  };
 
 export const getOutdatedScoreBotUsers = async (
   { limit = 100 }: { limit: number } = { limit: 100 }
