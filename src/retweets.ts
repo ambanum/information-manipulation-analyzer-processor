@@ -109,7 +109,7 @@ export default class RetweetsPoller {
         MIN_PRIORITY
       ));
     } catch (e) {
-      logging.error(e);
+      this.logger.error(e);
       return setTimeout(
         () => process.nextTick(this.pollRetweets.bind(this)),
         WAIT_TIME_ON_DB_ERROR
@@ -205,7 +205,7 @@ export default class RetweetsPoller {
           error: e.toString(),
         });
       } catch (e) {
-        logging.error(e);
+        this.logger.error(e);
         return setTimeout(
           () => process.nextTick(this.pollRetweets.bind(this)),
           WAIT_TIME_ON_DB_ERROR

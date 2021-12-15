@@ -20,7 +20,7 @@ export default class UserPoller {
     try {
       items = await UserManager.getOutdatedScoreBotUsers({ limit });
     } catch (e) {
-      logging.error(e);
+      this.logger.error(e);
       return setTimeout(
         () => process.nextTick(this.pollUsers.bind(this, limit)),
         WAIT_TIME_ON_DB_ERROR

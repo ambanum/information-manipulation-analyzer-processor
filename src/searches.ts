@@ -56,7 +56,7 @@ export default class SearchPoller {
         MIN_PRIORITY
       ));
     } catch (e) {
-      logging.error(e);
+      this.logger.error(e);
       return setTimeout(
         () => process.nextTick(this.pollSearches.bind(this)),
         WAIT_TIME_ON_DB_ERROR
@@ -235,7 +235,7 @@ export default class SearchPoller {
           error: e.toString(),
         });
       } catch (e) {
-        logging.error(e);
+        this.logger.error(e);
         return setTimeout(
           () => process.nextTick(this.pollSearches.bind(this)),
           WAIT_TIME_ON_DB_ERROR
