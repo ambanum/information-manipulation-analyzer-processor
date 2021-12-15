@@ -134,6 +134,9 @@ export default class SearchPoller {
       // save users
       const users = scraper.getUsers();
       const tweets = scraper.getTweets();
+      this.logger.info(
+        `Found ${users.length} users and ${tweets.length} tweets for ${item.search.name}`
+      );
 
       await UserManager.batchUpsert(session)(users, item.search._id, Scraper.platformId);
       await TweetManager.batchUpsert(session)(tweets, item.search._id);

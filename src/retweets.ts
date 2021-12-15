@@ -158,6 +158,7 @@ export default class RetweetsPoller {
       );
 
       const tweetsToUpdate = scraper.getRetweetUpdatedValues();
+      this.logger.info(`Found ${tweetsToUpdate.length} tweets to update for ${item.search.name}`);
 
       const updatedDocuments = await TweetManager.batchUpsertAndReturnDocument(session)(
         tweetsToUpdate,
