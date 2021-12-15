@@ -2,13 +2,15 @@ import * as ProcessorManager from 'managers/ProcessorManager';
 import * as TweetManager from 'managers/TweetManager';
 import * as logging from 'common/logging';
 
-import { QueueItemActionTypes, QueueItemStatuses } from 'interfaces';
+import { QueueItemActionTypes, QueueItemStatuses, QueueItem } from 'interfaces';
 
 import EmailNotifier from 'notifier/email';
 import QueueItemManager from 'managers/QueueItemManager';
 import Scraper from 'common/node-snscrape';
+import ProxyList from 'common/proxy-list';
 
 const WAIT_TIME = 1 * 1000; // 1s
+const WAIT_TIME_ON_DB_ERROR = 30 * 1000; // 30s
 const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
 const MIN_PRIORITY = parseInt(process.env?.MIN_PRIORITY || '0', 10);
 const NEXT_PROCESS_IN_FUTURE = 60 * 60 * 1000; // 1 hour
@@ -77,6 +79,8 @@ export default class RetweetsPoller {
   private processorId: string;
   private logger: logging.Logger;
   private queueItemManager: QueueItemManager;
+  private proxyList: ProxyList;
+
   constructor({ processorId }) {
     this.processorId = processorId;
     this.logger = logging.getLogger('[retweets]');
@@ -93,12 +97,24 @@ export default class RetweetsPoller {
      */
     await this.queueItemManager.createMissingQueueItemsIfNotExist();
     await this.queueItemManager.resetOutdated(QueueItemActionTypes.RETWEETS);
+    this.proxyList = await ProxyList.getInstance();
   }
+
   async pollRetweets() {
-    const { item, count } = await this.queueItemManager.getPendingSearches(
-      QueueItemActionTypes.RETWEETS,
-      MIN_PRIORITY
-    );
+    let item: QueueItem;
+    let count: number;
+    try {
+      ({ item, count } = await this.queueItemManager.getPendingSearches(
+        QueueItemActionTypes.RETWEETS,
+        MIN_PRIORITY
+      ));
+    } catch (e) {
+      logging.error(e);
+      return setTimeout(
+        () => process.nextTick(this.pollRetweets.bind(this)),
+        WAIT_TIME_ON_DB_ERROR
+      );
+    }
     if (!item) {
       await ProcessorManager.update(this.processorId, { lastPollAt: new Date() });
       this.logger.debug(`No more items to go, waiting ${WAIT_TIME / 1000}s`);
@@ -130,14 +146,19 @@ export default class RetweetsPoller {
         throw e;
       }
     };
-
+    let scraper: Scraper;
     try {
       await this.queueItemManager.startProcessingRetweets(item);
       await ProcessorManager.update(this.processorId, { lastProcessedAt: new Date() });
 
-      let scraper = initScraper();
-      await scraper.downloadRetweets();
+      scraper = initScraper();
+      await this.proxyList.retryWithProxy(
+        async (proxy) => scraper.downloadRetweets(proxy.url),
+        (error) => error.toString().includes('Unable to find guest token')
+      );
+
       const tweetsToUpdate = scraper.getRetweetUpdatedValues();
+      this.logger.info(`Found ${tweetsToUpdate.length} tweets to update for ${item.search.name}`);
 
       const updatedDocuments = await TweetManager.batchUpsertAndReturnDocument(session)(
         tweetsToUpdate,
@@ -175,19 +196,27 @@ export default class RetweetsPoller {
         await this.queueItemManager.stopProcessingRetweets(item, {});
       }
       // await session.commitTransaction();
-      scraper.purge();
       this.logger.info(`Item ${item._id} processing is done, waiting ${WAIT_TIME / 1000}s`);
     } catch (e) {
       // await session.abortTransaction();
       this.logger.error(e);
-      // we have found some volumetry
-      await this.queueItemManager.stopProcessingSearchWithError(item, {
-        error: e.toString(),
-      });
+      try {
+        await this.queueItemManager.stopProcessingSearchWithError(item, {
+          error: e.toString(),
+        });
+      } catch (e) {
+        logging.error(e);
+        return setTimeout(
+          () => process.nextTick(this.pollRetweets.bind(this)),
+          WAIT_TIME_ON_DB_ERROR
+        );
+      }
+
       this.logger.error(
         `Item ${item._id} could not be processed correctly retrying in ${WAIT_TIME / 1000}s`
       );
     }
+    scraper.purge();
     // session.endSession();
     return setTimeout(() => {
       return process.nextTick(this.pollRetweets.bind(this));

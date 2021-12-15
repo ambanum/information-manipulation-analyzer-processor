@@ -2,14 +2,16 @@ import * as ProcessorManager from 'managers/ProcessorManager';
 import * as TweetManager from 'managers/TweetManager';
 import * as UserManager from 'managers/UserManager';
 import * as logging from 'common/logging';
+import ProxyList from 'common/proxy-list';
 
-import { QueueItemActionTypes, QueueItemStatuses, SearchStatuses } from 'interfaces';
+import { QueueItemActionTypes, QueueItemStatuses, SearchStatuses, QueueItem } from 'interfaces';
 
 import QueueItemManager from 'managers/QueueItemManager';
 import Scraper from 'common/node-snscrape';
 import { getUrlData } from 'url-scraper';
 
 const WAIT_TIME = 1 * 1000; // 1s
+const WAIT_TIME_ON_DB_ERROR = 30 * 1000; // 30s
 const NB_TWEETS_TO_SCRAPE = process.env?.NB_TWEETS_TO_SCRAPE;
 const NB_TWEETS_TO_SCRAPE_FIRST_TIME = process.env?.NB_TWEETS_TO_SCRAPE_FIRST_TIME;
 const MIN_PRIORITY = parseInt(process.env?.MIN_PRIORITY || '0', 10);
@@ -28,6 +30,7 @@ export default class SearchPoller {
   private processorId: string;
   private logger: logging.Logger;
   private queueItemManager: QueueItemManager;
+  private proxyList: ProxyList;
 
   constructor({ processorId }) {
     this.processorId = processorId;
@@ -40,14 +43,26 @@ export default class SearchPoller {
   }
 
   async init() {
+    this.proxyList = await ProxyList.getInstance();
     await this.queueItemManager.resetOutdated(QueueItemActionTypes.SEARCH);
   }
 
   async pollSearches() {
-    const { item, count } = await this.queueItemManager.getPendingSearches(
-      QueueItemActionTypes.SEARCH,
-      MIN_PRIORITY
-    );
+    let item: QueueItem;
+    let count: number;
+    try {
+      ({ item, count } = await this.queueItemManager.getPendingSearches(
+        QueueItemActionTypes.SEARCH,
+        MIN_PRIORITY
+      ));
+    } catch (e) {
+      logging.error(e);
+      return setTimeout(
+        () => process.nextTick(this.pollSearches.bind(this)),
+        WAIT_TIME_ON_DB_ERROR
+      );
+    }
+
     if (!item) {
       await ProcessorManager.update(this.processorId, { lastPollAt: new Date() });
       this.logger.debug(`No more items to go, waiting ${WAIT_TIME / 1000}s`);
@@ -89,6 +104,8 @@ export default class SearchPoller {
       }
     };
 
+    let scraper: Scraper;
+
     try {
       await this.queueItemManager.startProcessingSearch(item, {
         previous: isRequestForPreviousData,
@@ -107,12 +124,19 @@ export default class SearchPoller {
 
       await ProcessorManager.update(this.processorId, { lastProcessedAt: new Date() });
 
-      let scraper = initScraper();
-      await scraper.downloadTweets();
+      scraper = initScraper();
+
+      await this.proxyList.retryWithProxy(
+        async (proxy) => scraper.downloadTweets(proxy.url),
+        (error) => error.toString().includes('Unable to find guest token')
+      );
 
       // save users
       const users = scraper.getUsers();
       const tweets = scraper.getTweets();
+      this.logger.info(
+        `Found ${users.length} users and ${tweets.length} tweets for ${item.search.name}`
+      );
 
       await UserManager.batchUpsert(session)(users, item.search._id, Scraper.platformId);
       await TweetManager.batchUpsert(session)(tweets, item.search._id);
@@ -199,20 +223,30 @@ export default class SearchPoller {
       }
 
       // await session.commitTransaction();
-      scraper.purge();
+
       this.logger.info(`Item ${item._id} processing is done, waiting ${WAIT_TIME / 1000}s`);
     } catch (e) {
       // await session.abortTransaction();
       this.logger.error(e);
 
-      // we have found some volumetry
-      await this.queueItemManager.stopProcessingSearchWithError(item, {
-        error: e.toString(),
-      });
+      try {
+        // we have found some volumetry
+        await this.queueItemManager.stopProcessingSearchWithError(item, {
+          error: e.toString(),
+        });
+      } catch (e) {
+        logging.error(e);
+        return setTimeout(
+          () => process.nextTick(this.pollSearches.bind(this)),
+          WAIT_TIME_ON_DB_ERROR
+        );
+      }
+
       this.logger.error(
         `Item ${item._id} could not be processed correctly retrying in ${WAIT_TIME / 1000}s`
       );
     }
+    scraper?.purge();
     // session.endSession();
 
     return setTimeout(() => {

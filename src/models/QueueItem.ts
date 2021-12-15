@@ -68,7 +68,7 @@ const schema = new Schema<QueueItem>(
     search: { type: Schema.Types.ObjectId, ref: 'Search' },
     error: {
       type: String,
-      index: true,
+      index: 'text',
     },
   },
   {
