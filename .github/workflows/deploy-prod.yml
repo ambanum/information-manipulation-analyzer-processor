@@ -11,7 +11,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
       - run: git checkout HEAD
       # Enable deployment from github actions https://zellwk.com/blog/github-actions-deploy/
       - name: Install SSH key
