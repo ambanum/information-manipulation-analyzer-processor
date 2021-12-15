@@ -24,14 +24,14 @@
       args:
         ENV_FILE: '{{ env_file }}'
       path: '/home/{{ ansible_user }}/{{ app }}'
-    name: '{{ app }}:{{ result_git_clone.before[:8] }}'
+    name: '{{ app }}:{{ result_git_clone.before[:7] }}'
     force_source: yes
 
 - name: Start the container
   become: yes
   community.general.docker_container:
     name: '{{ app }}-1'
-    image: '{{ app }}:{{ result_git_clone.before[:8] }}'
+    image: '{{ app }}:{{ result_git_clone.before[:7] }}'
     restart: yes
     state: started
     restart_policy: unless-stopped
@@ -53,7 +53,7 @@
   when: nb_processors == '2'
   community.general.docker_container:
     name: '{{ app }}-2'
-    image: '{{ app }}:{{ result_git_clone.before[:8] }}'
+    image: '{{ app }}:{{ result_git_clone.before[:7] }}'
     restart: yes
     state: started
     restart_policy: unless-stopped
@@ -75,7 +75,7 @@
   when: nb_processors == '3'
   community.general.docker_container:
     name: '{{ app }}-3'
-    image: '{{ app }}:{{ result_git_clone.before[:8] }}'
+    image: '{{ app }}:{{ result_git_clone.before[:7] }}'
     restart: yes
     state: started
     restart_policy: unless-stopped
