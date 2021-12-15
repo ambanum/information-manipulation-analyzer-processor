@@ -5,6 +5,7 @@ import * as logging from 'common/logging';
 import { getBotScores } from 'botscore';
 
 const DEFAULT_LIMIT = 2000;
+const WAIT_TIME_ON_DB_ERROR = 30 * 1000; // 30s
 export default class UserPoller {
   private processorId: string;
   private logger: logging.Logger;
@@ -15,7 +16,16 @@ export default class UserPoller {
   }
 
   async pollUsers(limit = DEFAULT_LIMIT) {
-    const items = await UserManager.getOutdatedScoreBotUsers({ limit });
+    let items: any;
+    try {
+      items = await UserManager.getOutdatedScoreBotUsers({ limit });
+    } catch (e) {
+      logging.error(e);
+      return setTimeout(
+        () => process.nextTick(this.pollUsers.bind(this, limit)),
+        WAIT_TIME_ON_DB_ERROR
+      );
+    }
 
     if (items.length === 0) {
       await ProcessorManager.update(this.processorId, { lastPollAt: new Date() });
