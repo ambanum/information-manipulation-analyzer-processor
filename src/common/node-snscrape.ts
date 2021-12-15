@@ -190,46 +190,45 @@ export default class Snscrape {
     return true;
   };
 
-  public downloadRetweets = async (retry = 3) => {
+  public downloadRetweets = async (proxyUrl?: string) => {
     if (this.tweets) {
       return this.tweets;
     }
 
-    if (!fs.existsSync(this.formattedFilePath)) {
-      const cmd = `${SNSCRAPE_PATH} --with-entity --max-results ${
-        this.nbTweetsToScrape
-      } --jsonl twitter-search "+${this.search
-        .replace('$', '\\$')
-        .replace(/"/gim, '\\"')} filter:nativeretweets ${
-        this.filter ? ` ${this.filter}` : ''
-      }" > "${this.originalFilePath}"`;
-
-      await Snscrape.waitUntilProcessNotRunning();
-      this.logger.info(cmd);
-      execCmd(cmd);
-
-      try {
-        // id are number that are tool big to be parsed by jq so change them in string
-        execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
-        // json format given by twint is weird and we need jq to recreate them
-        execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
-      } catch (e) {
-        this.logger.error(e); // eslint-disable-line
-
-        // TODO either end with error or fallback gently, depending on the error
-        execCmd(`echo "[]" > "${this.formattedFilePath}"`);
-      }
-    }
     try {
+      if (!fs.existsSync(this.formattedFilePath)) {
+        const cmd = `${
+          proxyUrl ? `HTTP_PROXY=${proxyUrl}` : ''
+        } ${SNSCRAPE_PATH} --with-entity --max-results ${
+          this.nbTweetsToScrape
+        } --jsonl twitter-search "+${this.search
+          .replace('$', '\\$')
+          .replace(/"/gim, '\\"')} filter:nativeretweets ${
+          this.filter ? ` ${this.filter}` : ''
+        }" > "${this.originalFilePath}"`;
+
+        await Snscrape.waitUntilProcessNotRunning();
+        this.logger.info(cmd);
+        execCmd(cmd);
+
+        try {
+          // id are number that are tool big to be parsed by jq so change them in string
+          execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
+          // json format given by twint is weird and we need jq to recreate them
+          execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
+        } catch (e) {
+          this.logger.error(e); // eslint-disable-line
+
+          // TODO either end with error or fallback gently, depending on the error
+          execCmd(`echo "[]" > "${this.formattedFilePath}"`);
+        }
+      }
+
       delete require.cache[require.resolve(this.formattedFilePath)];
       this.retweets = require(this.formattedFilePath);
     } catch (e) {
-      if (retry !== 0) {
-        this.logger.warn(`retrying downloading retweets after error ${retry}`); // eslint-disable-line
-        this.logger.warn(e); // eslint-disable-line
-        this.purge();
-        return this.downloadTweets(retry - 1);
-      }
+      this.logger.warn(e);
+      fs.unlinkSync(this.formattedFilePath);
       throw e;
     }
 
@@ -244,44 +243,41 @@ export default class Snscrape {
     return this.retweets;
   };
 
-  public downloadTweets = async (retry = 3) => {
+  public downloadTweets = async (proxyUrl?: string) => {
     if (this.tweets) {
       return this.tweets;
     }
-
-    if (!fs.existsSync(this.formattedFilePath)) {
-      this.logger.debug(`Download tweets to ${this.formattedFilePath} ${this.filter}`);
-      const cmd = `${SNSCRAPE_PATH} --with-entity --max-results ${
-        this.nbTweetsToScrape
-      } --jsonl twitter-search "+${this.search.replace('$', '\\$').replace(/"/gim, '\\"')} ${
-        this.filter ? ` ${this.filter}` : ''
-      }" > "${this.originalFilePath}"`;
-      await Snscrape.waitUntilProcessNotRunning();
-      this.logger.info(cmd);
-      execCmd(cmd);
-
-      try {
-        // id are number that are tool big to be parsed by jq so change them in string
-        execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
-        // json format given by twint is weird and we need jq to recreate them
-        execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
-      } catch (e) {
-        this.logger.error(e); // eslint-disable-line
-        // TODO either end with error or fallback gently, depending on the error
-        execCmd(`echo "[]" > "${this.formattedFilePath}"`);
-      }
-    }
     try {
+      if (!fs.existsSync(this.formattedFilePath)) {
+        this.logger.debug(`Download tweets to ${this.formattedFilePath} ${this.filter}`);
+        const cmd = `${
+          proxyUrl ? `HTTP_PROXY=${proxyUrl}` : ''
+        } ${SNSCRAPE_PATH} --with-entity --max-results ${
+          this.nbTweetsToScrape
+        } --jsonl twitter-search "+${this.search.replace('$', '\\$').replace(/"/gim, '\\"')} ${
+          this.filter ? ` ${this.filter}` : ''
+        }" > "${this.originalFilePath}"`;
+        await Snscrape.waitUntilProcessNotRunning();
+        this.logger.info(cmd);
+        execCmd(cmd);
+
+        try {
+          // id are number that are tool big to be parsed by jq so change them in string
+          execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
+          // json format given by twint is weird and we need jq to recreate them
+          execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
+        } catch (e) {
+          this.logger.error(e); // eslint-disable-line
+          // TODO either end with error or fallback gently, depending on the error
+          execCmd(`echo "[]" > "${this.formattedFilePath}"`);
+        }
+      }
+
       delete require.cache[require.resolve(this.formattedFilePath)];
       this.tweets = require(this.formattedFilePath);
     } catch (e) {
-      if (retry !== 0) {
-        this.logger.warn(`retrying downloading tweets after error ${retry}`); // eslint-disable-line
-        this.logger.warn(e); // eslint-disable-line
-        this.purge();
-        return this.downloadTweets(retry - 1);
-      }
-      process.exit();
+      this.logger.warn(e); // eslint-disable-line
+      fs.unlinkSync(this.formattedFilePath);
       throw e;
     }
     this.firstProcessedTweet = this.tweets[0];

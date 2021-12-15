@@ -2,6 +2,7 @@ import * as ProcessorManager from 'managers/ProcessorManager';
 import * as TweetManager from 'managers/TweetManager';
 import * as UserManager from 'managers/UserManager';
 import * as logging from 'common/logging';
+import ProxyList from 'common/proxy-list';
 
 import { QueueItemActionTypes, QueueItemStatuses, SearchStatuses } from 'interfaces';
 
@@ -28,6 +29,7 @@ export default class SearchPoller {
   private processorId: string;
   private logger: logging.Logger;
   private queueItemManager: QueueItemManager;
+  private proxyList: ProxyList;
 
   constructor({ processorId }) {
     this.processorId = processorId;
@@ -89,6 +91,8 @@ export default class SearchPoller {
       }
     };
 
+    let scraper: Scraper;
+
     try {
       await this.queueItemManager.startProcessingSearch(item, {
         previous: isRequestForPreviousData,
@@ -107,8 +111,12 @@ export default class SearchPoller {
 
       await ProcessorManager.update(this.processorId, { lastProcessedAt: new Date() });
 
-      let scraper = initScraper();
-      await scraper.downloadTweets();
+      scraper = initScraper();
+
+      await this.proxyList.retryWithProxy(
+        async (proxy) => scraper.downloadTweets(proxy.url),
+        (error) => error.toString().includes('Unable to find guest token')
+      );
 
       // save users
       const users = scraper.getUsers();
@@ -199,7 +207,7 @@ export default class SearchPoller {
       }
 
       // await session.commitTransaction();
-      scraper.purge();
+
       this.logger.info(`Item ${item._id} processing is done, waiting ${WAIT_TIME / 1000}s`);
     } catch (e) {
       // await session.abortTransaction();
@@ -213,6 +221,7 @@ export default class SearchPoller {
         `Item ${item._id} could not be processed correctly retrying in ${WAIT_TIME / 1000}s`
       );
     }
+    scraper?.purge();
     // session.endSession();
 
     return setTimeout(() => {
