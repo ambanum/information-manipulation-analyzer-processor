@@ -45,7 +45,7 @@ const schema = new Schema<Search>(
     firstOccurenceDate: { type: Date, index: true },
     oldestProcessedDate: { type: Date, index: true },
     newestProcessedDate: { type: Date, index: true },
-    error: { type: String, index: true },
+    error: { type: String, index: 'text' },
     scrapeVersion: { type: Number, index: true },
   },
   {
