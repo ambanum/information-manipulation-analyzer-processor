@@ -228,7 +228,9 @@ export default class Snscrape {
       this.retweets = require(this.formattedFilePath);
     } catch (e) {
       this.logger.warn(e);
-      fs.unlinkSync(this.formattedFilePath);
+      if (fs.existsSync(this.formattedFilePath)) {
+        fs.unlinkSync(this.formattedFilePath);
+      }
       throw e;
     }
 
@@ -277,7 +279,9 @@ export default class Snscrape {
       this.tweets = require(this.formattedFilePath);
     } catch (e) {
       this.logger.warn(e); // eslint-disable-line
-      fs.unlinkSync(this.formattedFilePath);
+      if (fs.existsSync(this.formattedFilePath)) {
+        fs.unlinkSync(this.formattedFilePath);
+      }
       throw e;
     }
     this.firstProcessedTweet = this.tweets[0];
