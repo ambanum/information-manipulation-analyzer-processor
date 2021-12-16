@@ -197,6 +197,7 @@ export default class Snscrape {
 
     try {
       if (!fs.existsSync(this.formattedFilePath)) {
+        fs.mkdirSync(this.dir, { recursive: true });
         const cmd = `${
           proxyUrl ? `HTTP_PROXY=${proxyUrl}` : ''
         } ${SNSCRAPE_PATH} --with-entity --max-results ${
@@ -211,17 +212,10 @@ export default class Snscrape {
         this.logger.info(cmd);
         execCmd(cmd);
 
-        try {
-          // id are number that are tool big to be parsed by jq so change them in string
-          execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
-          // json format given by twint is weird and we need jq to recreate them
-          execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
-        } catch (e) {
-          this.logger.error(e); // eslint-disable-line
-
-          // TODO either end with error or fallback gently, depending on the error
-          execCmd(`echo "[]" > "${this.formattedFilePath}"`);
-        }
+        // id are number that are tool big to be parsed by jq so change them in string
+        execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
+        // json format given by twint is weird and we need jq to recreate them
+        execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
       }
 
       delete require.cache[require.resolve(this.formattedFilePath)];
@@ -251,6 +245,7 @@ export default class Snscrape {
     }
     try {
       if (!fs.existsSync(this.formattedFilePath)) {
+        fs.mkdirSync(this.dir, { recursive: true });
         this.logger.debug(`Download tweets to ${this.formattedFilePath} ${this.filter}`);
         const cmd = `${
           proxyUrl ? `HTTP_PROXY=${proxyUrl}` : ''
@@ -263,16 +258,10 @@ export default class Snscrape {
         this.logger.info(cmd);
         execCmd(cmd);
 
-        try {
-          // id are number that are tool big to be parsed by jq so change them in string
-          execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
-          // json format given by twint is weird and we need jq to recreate them
-          execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
-        } catch (e) {
-          this.logger.error(e); // eslint-disable-line
-          // TODO either end with error or fallback gently, depending on the error
-          execCmd(`echo "[]" > "${this.formattedFilePath}"`);
-        }
+        // id are number that are tool big to be parsed by jq so change them in string
+        execCmd(`perl -i -pe 's/"id":\\s(\\d+)/"id":"$1"/g' "${this.originalFilePath}"`);
+        // json format given by twint is weird and we need jq to recreate them
+        execCmd(`(jq -s . < "${this.originalFilePath}") > "${this.formattedFilePath}"`);
       }
 
       delete require.cache[require.resolve(this.formattedFilePath)];

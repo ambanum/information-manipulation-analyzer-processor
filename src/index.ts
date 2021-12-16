@@ -58,8 +58,7 @@ const processorMetadata = {
       } else {
         logging.info('No USER_BOT_SCORES started');
       }
-    }
-    if (service === 'retweets') {
+    } else if (service === 'retweets') {
       const retweetsPoller = new RetweetsPoller({ processorId: PROCESSOR });
       await retweetsPoller.init();
       await retweetsPoller.pollRetweets();
