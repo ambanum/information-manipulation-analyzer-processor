@@ -197,6 +197,7 @@ export default class Snscrape {
 
     try {
       if (!fs.existsSync(this.formattedFilePath)) {
+        fs.mkdirSync(this.dir, { recursive: true });
         const cmd = `${
           proxyUrl ? `HTTP_PROXY=${proxyUrl}` : ''
         } ${SNSCRAPE_PATH} --with-entity --max-results ${
@@ -244,6 +245,7 @@ export default class Snscrape {
     }
     try {
       if (!fs.existsSync(this.formattedFilePath)) {
+        fs.mkdirSync(this.dir, { recursive: true });
         this.logger.debug(`Download tweets to ${this.formattedFilePath} ${this.filter}`);
         const cmd = `${
           proxyUrl ? `HTTP_PROXY=${proxyUrl}` : ''
