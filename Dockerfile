@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.8-slim
 
 EXPOSE 4000
 
@@ -12,8 +12,7 @@ RUN adduser ambnum && \
 # update package repositories
 RUN apt-get update -y
 RUN apt-get install -y python3-pip python3-numpy
-RUN pip install --upgrade pip setuptools wheel
-RUN pip install numpy
+RUN pip install --upgrade pip setuptools wheel numpy
 
 # install common useful libs for debugging
 RUN apt-get install -y nano git
@@ -44,11 +43,16 @@ RUN yarn
 COPY . /home/ambnum/
 RUN rm .env.*
 COPY ./docker/$ENV_FILE /home/ambnum/.env.production
+
+# For local build until I understand how to make a conditional RUN in docker
+# COPY ./$ENV_FILE /home/ambnum/.env.production
+
 RUN yarn build
 RUN chmod 777 /home/ambnum/build && \
     chown ambnum:ambnum /home/ambnum/build
-
-RUN pip install social-networks-bot-finder==1.2.0
+RUN pip install social-networks-bot-finder==1.2.3
+# this next line is here to break the build in case botfinder does not work
+RUN botfinder -v
 
 # clean
 RUN apt-get clean autoclean && \
