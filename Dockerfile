@@ -69,7 +69,8 @@ WORKDIR /home/ambnum
 
 # and install scraper for this user specifically as it does not work else
 # RUN pip3 install --user --upgrade "git+https://github.com/ambanum/twint.git@origin/master#egg=twint"
-RUN pip3 install git+https://github.com/JustAnotherArchivist/snscrape.git
+# use this commit as next breaks with  missing 1 required positional argument: 'thumbnailUrl'
+RUN pip3 install git+https://github.com/JustAnotherArchivist/snscrape.git@a192dc62368685fe4cd2229ab93a0babf8ad901a
 
 ENV PATH="/home/ambnum/.local/bin:${PATH}"
 
