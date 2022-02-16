@@ -127,7 +127,7 @@ export default class SearchPoller {
       scraper = initScraper();
 
       await this.proxyList.retryWithProxy(
-        async (proxy) => scraper.downloadTweets(proxy.url),
+        async (proxy) => scraper.downloadTweets(proxy?.url),
         (error) => error.toString().includes('Unable to find guest token')
       );
 

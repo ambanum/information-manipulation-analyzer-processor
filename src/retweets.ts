@@ -153,7 +153,7 @@ export default class RetweetsPoller {
 
       scraper = initScraper();
       await this.proxyList.retryWithProxy(
-        async (proxy) => scraper.downloadRetweets(proxy.url),
+        async (proxy) => scraper.downloadRetweets(proxy?.url),
         (error) => error.toString().includes('Unable to find guest token')
       );
 

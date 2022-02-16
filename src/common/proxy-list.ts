@@ -52,7 +52,7 @@ export default class ProxyList {
   ) {
     const proxy = this.getRandom();
     try {
-      await func(proxy);
+      await func(retry === 3 ? undefined : proxy);
     } catch (e: any) {
       if (!removeProxyCondition || (removeProxyCondition && removeProxyCondition(e))) {
         this.remove(proxy);
