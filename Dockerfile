@@ -2,7 +2,6 @@ FROM python:3.8-slim
 
 EXPOSE 4000
 
-ARG ENV_FILE=".env.production"
 
 # Create folder and user
 RUN adduser ambnum && \
@@ -41,8 +40,6 @@ RUN yarn
 
 # install microservice code
 COPY . /home/ambnum/
-RUN rm .env.*
-COPY ./docker/$ENV_FILE /home/ambnum/.env.production
 
 # For local build until I understand how to make a conditional RUN in docker
 # COPY ./$ENV_FILE /home/ambnum/.env.production

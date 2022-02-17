@@ -11,6 +11,14 @@
     - update
   register: git_clone_result
 
+# It would have been a lot better to inline vault the .env variables here
+# but it seems to only work in yaml files
+- name: 'Assemble secrets and common .env file'
+  assemble:
+    src: '{{ env_directory }}'
+    dest: '/home/{{ ansible_user }}/{{ directory }}/.env'
+    remote_src: False
+
 - name: Print some debug information
   debug:
     msg: '{{ git_clone_result | to_nice_json }}'
