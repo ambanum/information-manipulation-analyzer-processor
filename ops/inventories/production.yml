@@ -1,8 +1,29 @@
 all:
+  vars:
+    ansible_user: debian
+    repository: 'https://github.com/ambanum/information-manipulation-analyzer-processor.git'
+    nb_processors: '1'
+    ansible_host: 51.89.231.68
+    branch: 'main'
   children:
-    dev:
+    preprod:
       hosts:
-        51.89.231.68:
-          ansible_user: debian
-          ansible_ssh_extra_args: -o StrictHostKeyChecking=no
-          ansible_python_interpreter: /usr/bin/python3
+        preproduction:
+          branch: 'develop'
+          directory: 'ima-processor-preproduction'
+          port: '7822'
+          env_directory: '.env.preproduction'
+    prod:
+      hosts:
+        production:
+          directory: 'ima-processor-production'
+          port: '7022'
+          env_directory: '.env.production'
+        tflmi-production:
+          directory: 'ima-processor-tflmi-production'
+          port: '7024'
+          env_directory: '.env.tflmi.production'
+        ambnum-production:
+          directory: 'ima-processor-ambnum-production'
+          port: '7026'
+          env_directory: '.env.ambnum.production'
