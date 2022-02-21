@@ -24,7 +24,7 @@ RUN apt-get install -y jq
 
 # install specific version of node
 RUN apt-get install -y curl \
-    && curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+    && curl -sL https://deb.nodesource.com/setup_16.x | bash - \
     && apt-get install -y nodejs \
     && npm i -g yarn
 
