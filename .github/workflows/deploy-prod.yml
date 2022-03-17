@@ -27,7 +27,7 @@ jobs:
         run: npm run deploy:production
       - name: Deploy on TFLMI production
         run: npm run deploy:tflmi:production
-      - name: Deploy on AMBNUM production
-        run: npm run deploy:ambnum:production
+      # - name: Deploy on AMBNUM production
+      #   run: npm run deploy:ambnum:production
       - name: Deploy on SPIS production
         run: npm run deploy:spis:production
