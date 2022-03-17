@@ -26,6 +26,7 @@
     "deploy:vagrant": "ansible-playbook ops/site.yml -i ops/inventories/dev.yml --limit vagrant -vvv",
     "deploy:tflmi:production": "ansible-playbook ops/site.yml -i ops/inventories/production.yml  --limit tflmi-production -vvv",
     "deploy:ambnum:production": "ansible-playbook ops/site.yml -i ops/inventories/production.yml  --limit ambnum-production -vvv",
+    "deploy:spis:production": "ansible-playbook ops/site.yml -i ops/inventories/production.yml  --limit spis-production -vvv",
     "deploy:preproduction": "ansible-playbook ops/site.yml -i ops/inventories/production.yml --limit preproduction -vvv",
     "deploy:production": "ansible-playbook ops/site.yml -i ops/inventories/production.yml  --limit production -vvv",
     "docker:build": "docker build --progress plain -t $npm_package_name .",
