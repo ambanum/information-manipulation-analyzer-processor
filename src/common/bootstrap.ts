@@ -8,6 +8,7 @@ dotenv.config({ path: `./.env` });
 process.on('unhandledRejection', (reason: any) => {
   logging.error(`unhandledRejection ${reason}`);
   logging.error(reason);
+  logging.error(reason.stack);
   process.exit(1);
 });
 
