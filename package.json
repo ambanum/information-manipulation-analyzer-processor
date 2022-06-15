@@ -8,9 +8,9 @@
   "prettier": "prettier-config-ambanum",
   "scripts": {
     "build": "tsc",
-    "precommit": "(git diff --diff-filter=AM --name-only --staged | grep ops/roles/*/*/files/*.secrets | xargs grep -rL \"ANSIBLE\") && echo \"some vault files are not encrypted\" && exit",
-    "encrypt": "grep -rL \"ANSIBLE\" ./ops/roles/*/*/files/*.secrets | xargs ansible-vault encrypt",
-    "decrypt": "grep -rl \"ANSIBLE\" ./ops/roles/*/*/files/*.secrets | xargs ansible-vault decrypt",
+    "precommit": "(git diff --diff-filter=AM --name-only --staged | grep  ops/roles/*/*/files/.env.*/.env.secrets | xargs grep -rL \"ANSIBLE\") && echo \"some vault files are not encrypted\" && exit",
+    "encrypt": "grep -rL \"ANSIBLE\" ops/roles/*/*/files/.env.*/.env.secrets | xargs ansible-vault encrypt",
+    "decrypt": "grep -rl \"ANSIBLE\" ops/roles/*/*/files/.env.*/.env.secrets | xargs ansible-vault decrypt",
     "prepare": "husky install",
     "start:user": "NODE_PATH=build NODE_OPTIONS='--max_old_space_size=8192' node build/index.js user",
     "start:search": "NODE_PATH=build NODE_OPTIONS='--max_old_space_size=8192' node build/index.js search",
