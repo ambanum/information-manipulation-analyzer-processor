@@ -91,11 +91,11 @@ export default class RetweetsPoller {
     });
   }
   async init() {
-    /**
-     * This call should be archived after it has been launched on every processor
-     * as queue items should be created
-     */
-    await this.queueItemManager.createMissingQueueItemsIfNotExist();
+    // /**
+    //  * This call should be archived after it has been launched on every processor
+    //  * as queue items should be created
+    //  */
+    // await this.queueItemManager.createMissingQueueItemsIfNotExist();
     await this.queueItemManager.resetOutdated(QueueItemActionTypes.RETWEETS);
     this.proxyList = await ProxyList.getInstance();
   }
