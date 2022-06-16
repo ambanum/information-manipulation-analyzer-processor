@@ -111,46 +111,6 @@ export default class QueueItemManager {
     }
   };
 
-  createMissingQueueItemsIfNotExist = async () => {
-    const searches = await SearchModel.aggregate([
-      {
-        $lookup: {
-          from: 'queueitems',
-          localField: '_id',
-          foreignField: 'search',
-          as: 'queueitems',
-        },
-      },
-      {
-        $sort: {
-          'queueitems.createdAt': 1,
-        },
-      },
-    ]);
-
-    searches.map(async (search) => {
-      const hasRetweet = search.queueitems.some(
-        ({ action }) => action === QueueItemActionTypes.RETWEETS
-      );
-      const nbQueueItems = search.queueitems.length;
-      if (!hasRetweet && nbQueueItems > 10) {
-        await QueueItemModel.create(
-          [
-            {
-              action: QueueItemActionTypes.RETWEETS,
-              status: QueueItemStatuses.PENDING,
-              priority: QueueItemManager.PRIORITIES.HIGH,
-              processingDate: new Date(),
-              search: search._id,
-              metadata: search.queueitems[2].metadata,
-            },
-          ],
-          this.session ? { session: this.session } : {}
-        );
-      }
-    });
-  };
-
   getPendingSearches = async (
     action = QueueItemActionTypes.SEARCH,
     minPriority: number = QueueItemManager.PRIORITIES.NOW
